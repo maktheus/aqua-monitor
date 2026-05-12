@@ -370,32 +370,39 @@ endmodule
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=\textwidth]{fig_esquematico_add.png}
-  \caption{Esquemático do somador \textit{Ripple-Carry} de 8~bits, base das operações ADD e SUB. A cadeia de carry $C_0 \to C_1 \to \cdots \to C_{\text{out}}$ determina o caminho crítico de timing.}
-  \label{fig:schem_add}
+  \includegraphics[width=\textwidth]{fig_schem_full_adder.png}
+  \caption{Esquemático em nível de portas lógicas do \textit{Full Adder} (FA): 2~portas XOR, 2~portas AND e 1~porta OR, implementando $S = A \oplus B \oplus C_{in}$ e $C_{out} = AB + C_{in}(A \oplus B)$. Base do somador \textit{Ripple-Carry} de 8~bits.}
+  \label{fig:schem_fa}
 \end{figure}
-
-O somador \textit{Ripple-Carry} (\textit{RCA}) consiste em 8~\textit{Full Adders} (FA) em cascata, cada um implementando:
-\[
-  S_i = A_i \oplus B_i \oplus C_i, \qquad C_{i+1} = (A_i \cdot B_i) + (C_i \cdot (A_i \oplus B_i))
-\]
-A profundidade lógica do caminho de carry é de $2 \times 8 = 16$~níveis de porta (2 por FA), determinando o pior caso de atraso.
-
-\subsubsection{Unidade Lógica e de Deslocamento}
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=\textwidth]{fig_esquematico_logicas.png}
-  \caption{Esquemáticos das 6~operações lógicas e de deslocamento do ALUChip v1.0 (representação de 1~bit). As operações lógicas são de profundidade 1~nível; os deslocamentos requerem apenas reconexão de fios (\textit{zero latency}).}
-  \label{fig:schem_log}
+  \includegraphics[width=\textwidth]{fig_schem_rca8.png}
+  \caption{Esquemático do somador \textit{Ripple-Carry} de 8~bits (RCA-8): 8~\textit{Full Adders} em cascata. A cadeia $C_0 \to C_1 \to \cdots \to C_{\text{out}}$ é o caminho crítico de timing. Para SUB, o operando~B é invertido bit a bit e $C_{in}=1$ (complemento de 2).}
+  \label{fig:schem_rca}
+\end{figure}
+
+O somador \textit{Ripple-Carry} consiste em 8~FAs em cascata, cada um implementando:
+\[
+  S_i = A_i \oplus B_i \oplus C_i, \qquad C_{i+1} = (A_i \cdot B_i) + (C_i \cdot (A_i \oplus B_i))
+\]
+A profundidade lógica do caminho de carry é de $2 \times 8 = 16$~níveis de porta, determinando o pior caso de atraso ($\approx$1,4\,ns). A subtração reutiliza o mesmo caminho com $B \to \overline{B}$ e $C_{in}=1$.
+
+\subsubsection{Esquemático Completo e Unidade Lógica/Deslocamento}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{fig_schem_alu_completo.png}
+  \caption{Esquemático completo da ALUChip v1.0 em nível de portas: todos os 7~caminhos paralelos (ADD/SUB, AND, OR, XOR, NOT, SHL, SHR) convergindo no MUX~8:1, com a lógica de \textit{flags} à saída. O opcode OP[2:0] controla a seleção do MUX.}
+  \label{fig:schem_completo}
 \end{figure}
 
 \subsection{Lógica das Flags}
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=0.92\textwidth]{fig_flags.png}
-  \caption{Diagrama das 4~\textit{flags} de estado do ALUChip v1.0 e suas equações booleanas de geração.}
+  \includegraphics[width=\textwidth]{fig_schem_flags.png}
+  \caption{Esquemático em nível de portas das 4~\textit{flags} do ALUChip v1.0: (Z)~NOR-8 + inversão; (C)~MUX~3:1 selecionando carry-out, A[7] ou A[0]; (V)~dois caminhos AND-3 com OR final; (N)~passagem direta de R[7].}
   \label{fig:flags}
 \end{figure}
 

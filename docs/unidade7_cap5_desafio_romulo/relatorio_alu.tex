@@ -370,32 +370,39 @@ endmodule
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=\textwidth]{fig_esquematico_add.png}
-  \caption{Esquemático do somador \textit{Ripple-Carry} de 8~bits, base das operações ADD e SUB. A cadeia de carry $C_0 \to C_1 \to \cdots \to C_{\text{out}}$ determina o caminho crítico de timing.}
-  \label{fig:schem_add}
+  \includegraphics[width=\textwidth]{fig_schem_full_adder.png}
+  \caption{Esquemático em nível de portas lógicas do \textit{Full Adder} (FA): 2~portas XOR, 2~portas AND e 1~porta OR, implementando $S = A \oplus B \oplus C_{in}$ e $C_{out} = AB + C_{in}(A \oplus B)$. Base do somador \textit{Ripple-Carry} de 8~bits.}
+  \label{fig:schem_fa}
 \end{figure}
-
-O somador \textit{Ripple-Carry} (\textit{RCA}) consiste em 8~\textit{Full Adders} (FA) em cascata, cada um implementando:
-\[
-  S_i = A_i \oplus B_i \oplus C_i, \qquad C_{i+1} = (A_i \cdot B_i) + (C_i \cdot (A_i \oplus B_i))
-\]
-A profundidade lógica do caminho de carry é de $2 \times 8 = 16$~níveis de porta (2 por FA), determinando o pior caso de atraso.
-
-\subsubsection{Unidade Lógica e de Deslocamento}
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=\textwidth]{fig_esquematico_logicas.png}
-  \caption{Esquemáticos das 6~operações lógicas e de deslocamento do ALUChip v1.0 (representação de 1~bit). As operações lógicas são de profundidade 1~nível; os deslocamentos requerem apenas reconexão de fios (\textit{zero latency}).}
-  \label{fig:schem_log}
+  \includegraphics[width=\textwidth]{fig_schem_rca8.png}
+  \caption{Esquemático do somador \textit{Ripple-Carry} de 8~bits (RCA-8): 8~\textit{Full Adders} em cascata. A cadeia $C_0 \to C_1 \to \cdots \to C_{\text{out}}$ é o caminho crítico de timing. Para SUB, o operando~B é invertido bit a bit e $C_{in}=1$ (complemento de 2).}
+  \label{fig:schem_rca}
+\end{figure}
+
+O somador \textit{Ripple-Carry} consiste em 8~FAs em cascata, cada um implementando:
+\[
+  S_i = A_i \oplus B_i \oplus C_i, \qquad C_{i+1} = (A_i \cdot B_i) + (C_i \cdot (A_i \oplus B_i))
+\]
+A profundidade lógica do caminho de carry é de $2 \times 8 = 16$~níveis de porta, determinando o pior caso de atraso ($\approx$1,4\,ns). A subtração reutiliza o mesmo caminho com $B \to \overline{B}$ e $C_{in}=1$.
+
+\subsubsection{Esquemático Completo e Unidade Lógica/Deslocamento}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{fig_schem_alu_completo.png}
+  \caption{Esquemático completo da ALUChip v1.0 em nível de portas: todos os 7~caminhos paralelos (ADD/SUB, AND, OR, XOR, NOT, SHL, SHR) convergindo no MUX~8:1, com a lógica de \textit{flags} à saída. O opcode OP[2:0] controla a seleção do MUX.}
+  \label{fig:schem_completo}
 \end{figure}
 
 \subsection{Lógica das Flags}
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=0.92\textwidth]{fig_flags.png}
-  \caption{Diagrama das 4~\textit{flags} de estado do ALUChip v1.0 e suas equações booleanas de geração.}
+  \includegraphics[width=\textwidth]{fig_schem_flags.png}
+  \caption{Esquemático em nível de portas das 4~\textit{flags} do ALUChip v1.0: (Z)~NOR-8 + inversão; (C)~MUX~3:1 selecionando carry-out, A[7] ou A[0]; (V)~dois caminhos AND-3 com OR final; (N)~passagem direta de R[7].}
   \label{fig:flags}
 \end{figure}
 
@@ -508,16 +515,42 @@ Lógica de flags (Z/C/V/N)      & 12  & $\approx$65\,\textmu m²  & NOR-8 + AND-
 \end{tabular}
 \end{table}
 
-\subsection{Floorplan}
+\subsection{Floorplan e Layout Físico CMOS}
+
+O \textit{floorplan} distribui os três caminhos paralelos (aritmético, lógico, deslocamento) em faixas horizontais distintas, com o MUX~8:1 de saída centralizado na parte inferior e a lógica de \textit{flags} à direita. O roteamento global utiliza Metal-1 (trilhas horizontais) e Metal-2 (trilhas verticais), com o barramento VDD/GND em Metal-2 nos canais superior e inferior.
+
+\subsubsection{Célula Padrão: NAND2 CMOS}
+
+A Figura~\ref{fig:layout_nand2} apresenta o \textit{layout} físico de uma célula NAND2 em processo CMOS 0,35\,\textmu m com as camadas no padrão Cadence Virtuoso: N-Well (rosa), Active (verde), difusões P\textsuperscript{+}/N\textsuperscript{+} (salmão/laranja), Poly/Gate (magenta), Contacts (cinza escuro), Metal-1 (azul) e Metal-2 (laranja). Os transistores PMOS (M1, M2: W\,=\,3\,\textmu m, L\,=\,0,35\,\textmu m) estão em paralelo no N-Well, enquanto os NMOS (M3, M4: W\,=\,1,5\,\textmu m) ficam em série no substrato P, com \textit{guard rings} P\textsuperscript{+}/N\textsuperscript{+} para isolamento de latch-up.
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=0.72\textwidth]{fig_floorplan_alu.png}
-  \caption{\textit{Floorplan} estimado do ALUChip v1.0 em die de 120\,\textmu m\,$\times$\,120\,\textmu m. Blocos internos: somador (azul), unidade lógica (verde), deslocador (laranja), MUX 8:1 (roxo) e lógica de flags (vermelho). Pads de I/O circundam o \textit{core}.}
-  \label{fig:floor}
+  \includegraphics[width=0.82\textwidth]{fig_layout_nand2.png}
+  \caption{Layout físico da célula NAND2 CMOS (0,35\,\textmu m). Camadas: N-Well (rosa), Active (verde), P\textsuperscript{+} (salmão), N\textsuperscript{+} (laranja), Poly/Gate (magenta), Contact (cinza), Metal-1 (azul), Metal-2 (laranja). Arranjo Common-Centroid com Guard Rings P\textsuperscript{+}/N\textsuperscript{+}.}
+  \label{fig:layout_nand2}
 \end{figure}
 
-O \textit{floorplan} distribui os três caminhos paralelos (aritmético, lógico, deslocamento) horizontalmente, com o MUX de saída ao centro e a lógica de \textit{flags} à direita. O roteamento global utiliza metal-1 (trilhas horizontais) e metal-2 (trilhas verticais), com metal-3 reservado para alimentação VDD/GND.
+\subsubsection{Die Completo --- ALUChip v1.0}
+
+A Figura~\ref{fig:layout_die} exibe o \textit{layout} de nível de die do ALUChip v1.0 em escala real (74,4\,\textmu m\,$\times$\,54,1\,\textmu m\,=\,4025\,\textmu m²). São visíveis as três faixas funcionais: \textbf{Ripple-Carry Adder} (8 Full Adders FA0--FA7, faixa superior), \textbf{Logic Unit + Shift Unit} (faixa central) e \textbf{MUX 8:1 + Flag Logic} (faixa inferior). Os baramentos VDD e GND em Metal-2 percorrem toda a largura do die nos canais superior e inferior.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{fig_layout_die.png}
+  \caption{Layout físico de die do ALUChip v1.0 (74,4\,\textmu m\,$\times$\,54,1\,\textmu m, CMOS 0,35\,\textmu m). Faixas: RCA com 8 Full Adders (topo), Unidade Lógica + Deslocamento (centro), MUX 8:1 e Lógica de Flags (base). Metal-2 em laranja nos trilhos de alimentação VDD/GND.}
+  \label{fig:layout_die}
+\end{figure}
+
+\subsubsection{Zoom: Célula Full Adder com Common-Centroid ABBA}
+
+A Figura~\ref{fig:layout_fa} detalha o \textit{layout} interno de um Full Adder (XOR$_1$ + AND$_1$) com arranjo \textbf{Common-Centroid ABBA}: os transistores do par diferencial PMOS são intercalados na ordem M1a\,|\,M2a\,|\,M2b\,|\,M1b para minimizar o descasamento por gradiente de processo. O par espelho (M3, M4) ocupa a faixa direita do N-Well, e os transistores de cauda/corrente (M5--M7) situam-se abaixo no substrato P.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.88\textwidth]{fig_layout_fa_zoom.png}
+  \caption{Zoom do layout da célula Full Adder (XOR$_1$ + AND$_1$). Arranjo Common-Centroid ABBA para o par diferencial PMOS: M1a\,|\,M2a\,|\,M2b\,|\,M1b. Guard Rings P\textsuperscript{+}/N\textsuperscript{+} ao redor da célula. Processo CMOS 0,35\,\textmu m.}
+  \label{fig:layout_fa}
+\end{figure}
 
 \subsection{Consumo de Potência}
 
@@ -579,7 +612,8 @@ O presente trabalho apresentou o projeto, implementação e verificação do \te
   \item \textbf{Design combinacional puro:} Latência de $\approx$1,4\,ns no caminho crítico (ADD/SUB), permitindo $f_{\max} > 700$\,MHz.
   \item \textbf{Área compacta:} $\approx$520\,\textmu m² de \textit{core}, compatível com integração em SoCs de alta densidade.
   \item \textbf{Baixo consumo:} $\approx$32\,\textmu W a 100\,MHz, adequado para sistemas embarcados com restrições energéticas.
-  \item \textbf{Esquemáticos completos:} Somador \textit{Ripple-Carry}, unidades lógica e de deslocamento documentados.
+  \item \textbf{Esquemáticos completos:} Somador \textit{Ripple-Carry}, unidades lógica e de deslocamento documentados ao nível de portas lógicas.
+  \item \textbf{Layout físico CMOS:} Célula NAND2, die completo (74,4\,\textmu m\,$\times$\,54,1\,\textmu m) e zoom Full Adder com Common-Centroid ABBA gerados no padrão de camadas Cadence Virtuoso.
 \end{enumerate}
 
 \begin{resultbox}[Síntese dos Resultados Finais]
@@ -588,8 +622,9 @@ O presente trabalho apresentou o projeto, implementação e verificação do \te
 \textbf{Operações implementadas:}  & ADD, SUB, AND, OR, XOR, NOT, SHL, SHR \\
 \textbf{Flags:}                    & Z, C, V, N \\
 \textbf{Atraso crítico (ADD/SUB):} & $\approx$1,4\,ns (pré-layout) \\
-\textbf{Área de core:}             & $\approx$520\,\textmu m² \\
+\textbf{Área de core:}             & $\approx$520\,\textmu m² (die: 74,4\,\textmu m\,$\times$\,54,1\,\textmu m) \\
 \textbf{Potência dinâmica:}        & $\approx$32\,\textmu W @ 100\,MHz \\
+\textbf{Layout CMOS 0,35\,\textmu m:} & NAND2 + die completo + FA Common-Centroid ABBA \\
 \end{tabular}
 \end{resultbox}
 

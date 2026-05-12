@@ -26,6 +26,8 @@
 \usepackage{mdframed}
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,fit,backgrounds,calc}
 
 \geometry{left=3cm, top=3cm, right=2cm, bottom=2cm}
 \onehalfspacing
@@ -39,6 +41,7 @@
 \definecolor{aquacolor}{rgb}{0.0,0.50,0.55}
 \definecolor{boxblue}{rgb}{0.88,0.93,0.98}
 \definecolor{boxgreen}{rgb}{0.88,0.97,0.88}
+\definecolor{boxyellow}{rgb}{1.0,0.98,0.88}
 
 % ─── Listagens de código ──────────────────────────────────────────────────────
 \lstset{
@@ -67,6 +70,11 @@
   colback=boxgreen, colframe=codegreen!70!black,
   fonttitle=\bfseries, title=#1, breakable
 }
+\newtcolorbox{unidadebox}[1][]{
+  colback=boxyellow, colframe=orange!70!black,
+  fonttitle=\bfseries\small, title=#1, breakable,
+  before upper=\footnotesize
+}
 
 % ─── Cabeçalho ────────────────────────────────────────────────────────────────
 \pagestyle{fancy}\fancyhf{}
@@ -87,8 +95,7 @@
   {\large\bfseries Faculdade de Tecnologia -- FT}\\[0.1cm]
   {\large\bfseries Curso de Engenharia da Computacao}\\[1.8cm]
 
-  {\large\bfseries Matheus Serrao Uchoa \quad Matricula: 22052633}\\[0.3cm]
-  {\large\bfseries [Nome Componente 2] \quad Matricula: [Inserir]}\\[1.8cm]
+  {\large\bfseries Matheus Serrao Uchoa \quad Matricula: 22052633}\\[1.8cm]
 
   {\LARGE\bfseries RELATORIO TECNICO FINAL\\[0.3cm]
    Unidade 7 $|$ Capitulo 5 -- Desafio de Design de Circuitos Integrados}\\[0.7cm]
@@ -100,7 +107,7 @@
 
   \vfill
   {\normalsize\textbf{Disciplina:} Design de Circuitos Integrados -- CI Amazonia}\\[0.1cm]
-  {\normalsize\textbf{Professor:} Joao Fonseca}\\[0.3cm]
+  {\normalsize\textbf{Professor:} Thiago Brito}\\[0.3cm]
   {\normalsize Manaus -- AM \quad Maio de 2026}
 \end{center}
 \end{titlepage}
@@ -117,26 +124,32 @@
 Este relatorio tecnico descreve o desenvolvimento integral do sistema \textbf{Aqua Monitor},
 uma plataforma de codigo aberto voltada ao monitoramento continuo da qualidade da agua em
 viveiros de piscicultura da regiao amazonica. O sistema e composto por quatro camadas funcionais
-integradas: (i)~\textbf{Hardware embarcado} -- microcontrolador ESP32 conectado a quatro sensores
-(temperatura DS18B20, pH PH4502C, turbidez SEN0189 e solidos dissolvidos Gravity TDS), com
-comunicacao via protocolo MQTT e envio de dados a plataforma de nuvem Firebase/Firestore; (ii)~\textbf{Backend inteligente}
+integradas: (i)~\textbf{Hardware embarcado} -- microcontrolador ESP32 (sistema em chip da
+Espressif com Wi-Fi integrado) conectado a quatro sensores (temperatura DS18B20, pH PH4502C,
+turbidez SEN0189 e solidos dissolvidos Gravity TDS), com comunicacao via protocolo MQTT
+(\textit{Message Queuing Telemetry Transport}, protocolo padrao para IoT -- \textit{Internet of Things})
+e envio de dados a plataforma de nuvem Firebase/Firestore; (ii)~\textbf{Backend inteligente}
 -- servidor Python/FastAPI com agente de linguagem (Ollama qwen2:0.5b) para interpretacao de
 perguntas em linguagem natural sobre qualidade da agua; (iii)~\textbf{Aplicativo mobile}
 -- desenvolvido em Ionic/React/TypeScript, com monitoramento em tempo real, historico de dados
 com graficos, exportacao em PDF e controle remoto do ESP32; (iv)~\textbf{Modulo de microeletronica}
--- projeto de um Conversor Analogico-Digital de Aproximacoes Sucessivas (SAR ADC) de 4~bits em
-tecnologia CMOS de $1{,}8\,\text{V}$ (180nm), concebido para substituir o ADC interno do ESP32,
-cuja qualidade e degradada pelo ruido radiado pelo modulo Wi-Fi integrado. O projeto do SAR ADC
-cobre o fluxo completo de design de circuitos integrados de sinal misto: especificacao eletrica,
-Maquina de Estados em Verilog RTL, DAC de redistribuicao de carga ($C_0 = 100\,\text{fF}$,
-ruido $kT/C = 1{,}6\,\text{mV}$ com margem de $35\times$ sobre $V_{LSB}/2$), comparador diferencial
-PMOS de dois estagios ($A_1 = 95\,\text{V/V}$, $t_{pd} = 7{,}4\,\text{ns}$ pre-layout),
-layout fisico Common-Centroid ($4025\,\mu\text{m}^2$), extracao de parasitas e simulacao
-pos-layout ($\Delta t_{pd} = +2{,}6\,\text{ns}$, $\Delta V_{th} = 0{,}3\,\text{mV}$),
-alem de verificacao LVS sem erros (7 transistores, 10 nos, 0 violacoes). A figura de merito
-energetica calculada e $\text{FOM}_{Walden} = 45\,\text{fJ/conv-step}$.\\[0.5em]
+-- projeto de um Conversor Analogico-Digital de Aproximacoes Sucessivas (ADC SAR --
+\textit{Successive Approximation Register Analog-to-Digital Converter}) de 4~bits em
+tecnologia CMOS (\textit{Complementary Metal-Oxide-Semiconductor}) de $1{,}8\,\text{V}$ (180nm),
+concebido para substituir o ADC interno do ESP32, cuja qualidade e degradada pelo ruido
+radiado pelo modulo Wi-Fi integrado. O projeto cobre o fluxo completo de design de circuitos
+integrados de sinal misto: especificacao eletrica, Maquina de Estados Finita (FSM --
+\textit{Finite State Machine}) em SystemVerilog RTL (\textit{Register Transfer Level}),
+DAC (\textit{Digital-to-Analog Converter}) de redistribuicao de carga ($C_0 = 100\,\text{fF}$,
+ruido $kT/C = 1{,}6\,\text{mV}$ com margem de $35\times$ sobre $V_{LSB}/2$), comparador
+diferencial PMOS de dois estagios ($A_1 = 95\,\text{V/V}$, $t_{pd} = 7{,}4\,\text{ns}$
+pre-layout), layout fisico Common-Centroid ($4025\,\mu\text{m}^2$), extracao de parasitas
+e simulacao pos-layout ($\Delta t_{pd} = +2{,}6\,\text{ns}$, $\Delta V_{th} = 0{,}3\,\text{mV}$),
+alem de verificacao LVS (\textit{Layout vs.~Schematic}) sem erros (7 transistores, 10 nos,
+0 violacoes DRC -- \textit{Design Rule Check}). A FOM (\textit{Figure of Merit}) de Walden
+calculada e $\text{FOM}_{Walden} = 45\,\text{fJ/conv-step}$.\\[0.5em]
 \textbf{Palavras-chave:} IoT, Aquicultura, Monitoramento Ambiental, SAR ADC, CMOS 180nm,
-Mixed-Signal, Redistribuicao de Carga, Comparador Diferencial, Common-Centroid, Verilog, LVS.
+Mixed-Signal, Redistribuicao de Carga, Comparador Diferencial, Common-Centroid, SystemVerilog, LVS.
 \end{abstract}
 \newpage
 
@@ -174,6 +187,50 @@ mais de $1\,\text{pH}$ de incerteza, tornando as leituras inuteis sem filtragem 
 Esta limitacao justifica o projeto de um \textbf{ADC customizado dedicado}, projetado especificamente
 para a faixa dinamica dos sensores do Aqua Monitor, sem a interferencia do transceptor de radio.
 
+\subsection{Objetivo Final: Integracao do Chip SAR ADC no Aqua Monitor}
+
+O objetivo final deste projeto e a integracao de um chip ADC SAR customizado em CMOS 180nm
+na cadeia de sinal do Aqua Monitor, substituindo o ADC interno do ESP32 para os canais de pH
+e turbidez. Como ilustrado na Figura~\ref{fig:signal_chain_intro}, o chip e posicionado entre
+o sensor analogico e o ESP32, isolando completamente a conversao A/D do ruido eletromagnetico
+gerado pelo transceptor Wi-Fi.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  block/.style={rectangle, draw, fill=#1, rounded corners=3pt,
+                text width=2.6cm, align=center, minimum height=1.0cm, font=\small},
+  arr/.style={-Stealth, thick, color=aquacolor!80!black},
+  noise/.style={font=\tiny, color=red!70}
+]
+\node[block=green!15] (s) {Sensor pH\\$0$--$1{,}8\,\text{V}$};
+\node[block=red!15, right=1.2cm of s] (chip)
+  {\textbf{SAR ADC}\\CMOS 180nm\\$\sigma=1{,}6\,\text{mV}$};
+\node[block=gray!15, right=1.2cm of chip] (esp) {ESP32\\(digital)\\$f=240\,\text{MHz}$};
+\node[block=blue!12, right=1.2cm of esp] (cloud) {Firebase\\Nuvem};
+
+\draw[arr] (s) -- node[above, font=\tiny]{analog} (chip);
+\draw[arr] (chip) -- node[above, font=\tiny]{4~bits} (esp);
+\draw[arr] (esp) -- node[above, font=\tiny]{HTTPS} (cloud);
+
+% Noise arrow from ESP to ADC (blocked by chip)
+\draw[->, dashed, color=red!50, thick] (esp.north) -- ++(0,0.5) -|
+  node[pos=0.5, above, noise]{ruido Wi-Fi ($60\,\text{mV}$) -- BLOQUEADO} (chip.north);
+\node[font=\Huge, color=red!60] at ([xshift=-0.3cm, yshift=0.35cm]chip.north east) {$\times$};
+
+\begin{scope}[on background layer]
+  \node[draw=red!60, dashed, rounded corners=5pt, fill=red!3,
+        fit=(chip), inner sep=5pt,
+        label={[font=\tiny\bfseries,color=red!70]below:Chip dedicado (isolado)}] {};
+\end{scope}
+\end{tikzpicture}
+\caption{Objetivo de integracao do projeto: o chip SAR ADC CMOS~180nm e inserido entre o
+sensor e o ESP32, bloqueando o ruido Wi-Fi de $60\,\text{mV}$ que degrada o ADC interno
+do microcontrolador. Com $\sigma_{kT/C}=1{,}6\,\text{mV}$, o chip melhora a qualidade de
+medicao de pH em mais de $30\times$.}
+\label{fig:signal_chain_intro}
+\end{figure}
+
 \subsection{Escopo e Organizacao deste Relatorio}
 
 Este relatorio apresenta o Aqua Monitor como um produto completo, descrevendo todas as camadas
@@ -210,11 +267,77 @@ modulo Gravity TDS, todos com saida analogica de tensao.}
 
 \subsection{Fluxo de Dados Completo}
 
+A Figura~\ref{fig:dataflow} ilustra o fluxo de dados completo do sistema em quatro camadas,
+desde os sensores fisicos imersos na agua ate a interface visual do usuario no celular.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm and 1.1cm,
+  box/.style={rectangle, rounded corners=4pt, draw, fill=#1, text width=2.8cm,
+              align=center, font=\small, minimum height=0.9cm},
+  arrow/.style={-Stealth, thick, color=aquacolor!80!black},
+  layerlabel/.style={font=\bfseries\footnotesize, color=gray!70!black,
+                    text width=1.6cm, align=right}
+]
+% --- Camada 1: Sensores ---
+\node[box=blue!15]  (s1) {DS18B20\\Temperatura};
+\node[box=blue!15, right=0.4cm of s1]  (s2) {PH4502C\\pH};
+\node[box=blue!15, right=0.4cm of s2]  (s3) {SEN0189\\Turbidez};
+\node[box=blue!15, right=0.4cm of s3]  (s4) {Gravity\\TDS};
+\node[layerlabel, left=0.2cm of s1] {Camada 1: Sensores};
+
+% --- Camada 2: Microcontrolador + ADC ---
+\node[box=green!20, below=0.9cm of s2, xshift=0.6cm, text width=5.8cm, minimum height=1.0cm]
+  (esp) {ESP32 (firmware C++/Arduino) + SAR ADC customizado (CMOS 180nm)};
+\node[layerlabel, left=0.4cm of esp] {Camada 2: Firmware};
+
+% --- Camada 3: Nuvem ---
+\node[box=orange!20, below=0.9cm of esp, xshift=-1.6cm] (fb) {Firebase\\Firestore};
+\node[box=orange!20, right=0.6cm of fb] (mqtt) {HiveMQ\\Broker MQTT};
+\node[box=orange!20, right=0.6cm of mqtt] (api) {FastAPI\\Ollama AI};
+\node[layerlabel, left=0.2cm of fb] {Camada 3: Nuvem};
+
+% --- Camada 4: Aplicativo ---
+\node[box=purple!15, below=0.9cm of fb, xshift=1.6cm, text width=5.8cm, minimum height=1.0cm]
+  (app) {Aplicativo Mobile (Ionic/React/TypeScript): Monitor | Historico | Chatbot};
+\node[layerlabel, left=0.4cm of app] {Camada 4: App};
+
+% Arrows sensores -> ESP32
+\draw[arrow] (s1.south) -- ++(0,-0.35) -| (esp.north west);
+\draw[arrow] (s2.south) -- ++(0,-0.35) -| ([xshift=-0.5cm]esp.north);
+\draw[arrow] (s3.south) -- ++(0,-0.35) -| ([xshift=+0.5cm]esp.north);
+\draw[arrow] (s4.south) -- ++(0,-0.35) -| (esp.north east);
+
+% Arrows ESP32 -> nuvem
+\draw[arrow] (esp.south) -- ++(0,-0.3) -| (fb.north)
+  node[midway, above, font=\tiny] {HTTPS/REST};
+\draw[arrow] (esp.south) -- ++(0,-0.3) -| (mqtt.north)
+  node[near end, right, font=\tiny] {MQTT};
+
+% Arrows nuvem -> app
+\draw[arrow] (fb.south) -- ++(0,-0.3) -| ([xshift=-1.2cm]app.north)
+  node[near end, left, font=\tiny] {Realtime};
+\draw[arrow] (mqtt.south) -- ++(0,-0.3) -| ([xshift=-0.2cm]app.north);
+\draw[arrow] (api.south) -- ++(0,-0.3) -| ([xshift=+1.2cm]app.north)
+  node[near end, right, font=\tiny] {Chatbot};
+
+% Reverse arrow: app -> ESP32 via MQTT
+\draw[arrow, dashed, color=gray!60] (app.east) -- ++(0.5,0) |- (esp.east)
+  node[midway, right, font=\tiny, color=gray!70] {Coleta remota};
+\end{tikzpicture}
+\caption{Diagrama completo do fluxo de dados do sistema Aqua Monitor em quatro camadas:
+(1)~Sensores fisicos, (2)~Microcontrolador ESP32 com SAR ADC customizado, (3)~Infraestrutura
+de nuvem (Firebase Firestore, MQTT HiveMQ, FastAPI/Ollama), (4)~Aplicativo mobile. A seta
+tracejada representa o fluxo de controle reverso para coleta remota via MQTT.}
+\label{fig:dataflow}
+\end{figure}
+
 \begin{conceitobox}[Entendendo o Fluxo de Dados]
-Imagine um ciclo de medicao como uma cadeia de 4 passos:
+O ciclo de medicao percorre quatro etapas:
 \begin{enumerate}[leftmargin=*, label=\textbf{\arabic*.}]
   \item \textbf{Sensores $\to$ ESP32:} Os sensores medem os parametros fisico-quimicos da agua
-        e convertem em sinais eleticos (voltagem analogica ou protocolo digital).
+        e convertem em sinais eletricos (tensao analogica ou protocolo digital).
   \item \textbf{ESP32 $\to$ Firebase:} O microcontrolador digitaliza os sinais, calcula os
         valores fisicos (pH, NTU, ppm) e envia um pacote JSON ao banco de dados na nuvem.
   \item \textbf{Firebase $\to$ Aplicativo:} O aplicativo escuta o banco de dados em tempo real
@@ -229,31 +352,32 @@ Imagine um ciclo de medicao como uma cadeia de 4 passos:
 
 \begin{table}[H]
 \centering
+\small
 \caption{Componentes tecnologicos do sistema Aqua Monitor por camada.}
 \label{tab:componentes}
-\begin{tabular}{llll}
+\begin{tabular}{p{2.0cm}p{2.4cm}p{4.2cm}p{4.8cm}}
 \toprule
 \textbf{Camada} & \textbf{Componente} & \textbf{Tecnologia} & \textbf{Funcao}\\
 \midrule
-Hardware    & Microcontrolador & ESP32 (Xtensa LX6, 240 MHz) & Leitura dos sensores e comunicacao \\
-Hardware    & Temperatura      & DS18B20 (OneWire)           & Mede $^\circ$C com precisao $\pm0{,}5^\circ$C \\
-Hardware    & pH               & PH4502C (eletrodo vidro)    & Mede pH 0--14 via voltagem \\
-Hardware    & Turbidez         & SEN0189 (fotodiodo)         & Mede opacidade da agua (NTU) \\
-Hardware    & TDS/Condut.      & Gravity TDS (DFRobot)       & Mede solidos dissolvidos (ppm) \\
+Hardware    & Microcontrolador & ESP32 (Xtensa LX6, 240~MHz) & Leitura dos sensores e comunicacao Wi-Fi \\
+Hardware    & Temperatura      & DS18B20 (OneWire digital)   & Mede temperatura ($\pm0{,}5\,^\circ$C) \\
+Hardware    & pH               & PH4502C (eletrodo de vidro) & Mede pH 0--14 via tensao analogica \\
+Hardware    & Turbidez         & SEN0189 (fotodiodo IR)      & Mede opacidade em NTU \\
+Hardware    & TDS/Condutiv.    & Gravity TDS (DFRobot)       & Mede solidos dissolvidos em ppm \\
 \midrule
-Firmware    & C++ (Arduino)    & ESP-IDF / Arduino SDK       & Conversoes fisicas + upload \\
+Firmware    & C++ / Arduino    & ESP-IDF + Arduino SDK       & Conversoes fisicas + upload HTTPS \\
 \midrule
-Nuvem       & Banco de dados   & Firebase Firestore (Google) & Armazena telemetria em tempo real \\
+Nuvem       & Banco de dados   & Firebase Firestore          & Telemetria em tempo real \\
 Nuvem       & Broker MQTT      & HiveMQ (publico)            & Disparo remoto de coleta \\
 \midrule
-Backend     & API Web          & Python/FastAPI              & Endpoint HTTP para chatbot \\
-Backend     & IA Local         & Ollama (qwen2:0.5b)         & Classificacao de intencao \\
+Backend     & API Web          & Python / FastAPI            & Endpoint HTTP para chatbot \\
+Backend     & IA Local         & Ollama qwen2:0.5b           & Classificacao de intencao NLP \\
 \midrule
-Frontend    & App Mobile       & Ionic/React/TypeScript      & Interface visual do usuario \\
-Frontend    & Graficos         & Recharts                    & Historico e tendencias \\
-Frontend    & Comunicacao      & Capacitor (Android/iOS)     & Empacotamento nativo \\
+Frontend    & App Mobile       & Ionic / React / TypeScript  & Interface visual do usuario \\
+Frontend    & Graficos         & Recharts + jsPDF            & Historico, tendencias e exportacao \\
+Frontend    & Comunicacao      & Capacitor (Android / iOS)   & Empacotamento nativo multiplataforma \\
 \midrule
-Microleletr.& ADC Customizado  & SAR 4-bits, CMOS 180nm      & Conversao A/D de alta qualidade \\
+Microeletr. & ADC Customizado  & SAR 4-bits, CMOS 180nm      & Conversao A/D dedicada, sem ruido Wi-Fi \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -641,28 +765,94 @@ real usaria 10--12~bits.
 
 \begin{table}[H]
 \centering
+\small
 \caption{Especificacoes eletricas do SAR ADC projetado. $V_{LSB} = V_{REF}/2^N = 112{,}5\,\text{mV}$.}
 \label{tab:specs}
-\begin{tabular}{lllcc}
+\begin{tabular}{p{3.0cm}p{1.6cm}p{5.0cm}rc}
 \toprule
-\textbf{Parametro} & \textbf{Simbolo} & \textbf{Justificativa da Escolha} & \textbf{Valor} & \textbf{Unidade}\\
+\textbf{Parametro} & \textbf{Simbolo} & \textbf{Justificativa} & \textbf{Valor} & \textbf{Unid.}\\
 \midrule
-Tecnologia          & $L_{min}$  & CMOS 180nm educacional disponivel      & 180    & nm \\
-Alimentacao         & $V_{DD}$   & Compativel com nivel logico do ESP32   & 1,8    & V \\
-Resolucao           & $N$        & 4 bits = 16 niveis; pedagogicamente ideal & 4   & bits \\
-Tensao do LSB       & $V_{LSB}$  & $V_{REF}/2^N$ = menor tensao resolvida & 112,5  & mV \\
-Freq.\ de amostragem & $f_S$     & Sensores aquaticos sao DC ou < 1~Hz    & 100    & kS/s \\
-Capacitor unitario  & $C_0$      & Criterio $kT/C$ + matching litografico & 100    & fF \\
-Capacitancia total  & $C_{tot}$  & $16 C_0$ = banco completo 4-bits       & 1,6    & pF \\
+Tecnologia          & $L_{min}$  & CMOS 180nm educacional disponivel        & 180    & nm \\
+Alimentacao         & $V_{DD}$   & Compat. com nivel logico do ESP32        & 1,8    & V \\
+Resolucao           & $N$        & 4~bits = 16 niveis; ideal para ensino    & 4      & bits \\
+Tensao do LSB       & $V_{LSB}$  & $V_{REF}/2^N$; menor tensao resolvida    & 112,5  & mV \\
+Freq.\ de amostragem & $f_S$     & Sensores aquaticos DC ou $< 1$~Hz        & 100    & kS/s \\
+Capacitor unitario  & $C_0$      & Criterio $kT/C$ + matching litografico   & 100    & fF \\
+Capacitancia total  & $C_{tot}$  & $16\,C_0$, banco completo 4-bits         & 1,6    & pF \\
 Ruido kT/C          & $\sigma_{kT/C}$ & $\sqrt{kT/C_{tot}}$; margem $35\times$ & 1,6 & mV \\
-ENOB teorico        & --         & Dominado por ruido de quantizacao      & 4,0    & bits \\
-Potencia (estatica) & $P_{diss}$ & Comparador 2 estagios                  & 72     & $\mu$W \\
-FOM Walden          & --         & $P/(f_S \cdot 2^{ENOB})$               & 45     & fJ/conv-step \\
+ENOB teorico        & --         & Dominado por ruido de quantizacao        & 4,0    & bits \\
+Potencia (estatica) & $P_{diss}$ & Comparador de 2 estagios                 & 72     & $\mu$W \\
+FOM Walden          & --         & $P/(f_S \cdot 2^{ENOB})$                 & 45     & fJ/cs \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Arquitetura: Os Tres Blocos do SAR ADC}
+
+A Figura~\ref{fig:sar_arch} apresenta o diagrama de blocos do SAR ADC, mostrando os tres
+subsistemas e seus sinais de interconexao.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=1.2cm and 1.8cm,
+  block/.style={rectangle, draw, fill=#1, rounded corners=3pt,
+                text width=3.0cm, align=center, minimum height=1.4cm, font=\small},
+  smallblock/.style={rectangle, draw, fill=gray!10, rounded corners=2pt,
+                text width=1.8cm, align=center, minimum height=0.7cm, font=\footnotesize},
+  arr/.style={-Stealth, thick},
+  arrdash/.style={Stealth-Stealth, thick, dashed, color=gray!60}
+]
+% Sensor input
+\node[smallblock] (sensor) {Sensor\\$V_{in}$};
+
+% Three main blocks
+\node[block=blue!15, right=1.4cm of sensor] (dac)
+  {\textbf{DAC Capacitivo}\\Redistribuicao\\de Carga\\$C_{tot}=1{,}6\,\text{pF}$};
+
+\node[block=red!12, right=1.6cm of dac] (comp)
+  {\textbf{Comparador}\\Diferencial\\PMOS 2-est.\\$A_1=95\,\text{V/V}$};
+
+\node[block=green!15, right=1.6cm of comp] (fsm)
+  {\textbf{FSM SAR}\\SystemVerilog\\7 estados\\$f_{clk}=600\,\text{kHz}$};
+
+% Output
+\node[smallblock, right=1.2cm of fsm] (out) {$D_{out}$\\4 bits};
+
+% Clock source
+\node[smallblock, above=1.0cm of fsm] (clk) {Clock\\600 kHz};
+
+% Arrows
+\draw[arr] (sensor) -- node[above,font=\tiny]{$V_{in}$ (0--1,8V)} (dac);
+\draw[arr] (dac) -- node[above,font=\tiny]{$V_{top}$} (comp);
+\draw[arr] (comp) -- node[above,font=\tiny]{comp\_out} (fsm);
+\draw[arr] (fsm) -- node[above,font=\tiny]{EOC/data} (out);
+
+% Feedback: FSM -> DAC
+\draw[arr, color=orange!80!black] (fsm.south) -- ++(0,-0.8) -|
+  node[pos=0.2, below, font=\tiny, color=orange!80!black] {dac\_in[3:0] (controle das chaves)}
+  (dac.south);
+
+% Clock -> FSM
+\draw[arr] (clk) -- (fsm.north);
+
+% Boundary boxes
+\begin{scope}[on background layer]
+  \node[draw=blue!40, fill=blue!5, rounded corners=4pt,
+        fit=(dac), inner sep=4pt, label={[font=\tiny,color=blue!60]above:Dominio Analogico I}] {};
+  \node[draw=red!40, fill=red!3, rounded corners=4pt,
+        fit=(comp), inner sep=4pt, label={[font=\tiny,color=red!60]above:Dominio Analogico II}] {};
+  \node[draw=green!50!black, fill=green!3, rounded corners=4pt,
+        fit=(fsm), inner sep=4pt, label={[font=\tiny,color=green!50!black]above:Dominio Digital}] {};
+\end{scope}
+\end{tikzpicture}
+\caption{Diagrama de blocos do SAR ADC de 4~bits. O sinal analogico $V_{in}$ entra no
+\textbf{DAC Capacitivo} (banco de redistribuicao de carga), que gera a tensao de referencia
+$V_{top}$. O \textbf{Comparador} decide se $V_{top} > 0$ e envia o resultado (1 bit) para
+a \textbf{FSM SAR}. A FSM controla as chaves do DAC, implementando a busca binaria em 4 ciclos
+de clock. Ao final, $D_{out}$ contem o codigo digital de 4~bits.}
+\label{fig:sar_arch}
+\end{figure}
 
 \begin{conceitobox}[O SAR ADC: Uma Busca Binaria em Tensao]
 Imagine que voce precisa adivinhar um numero de 0 a 15 (4 bits) com apenas 4 tentativas.
@@ -674,7 +864,7 @@ maior que 12?''; e assim por diante. O SAR ADC faz exatamente isso com tensoes:
         $(V_{DAC})$ correspondente ao bit sendo testado.
   \item \textbf{Comparador Analogico} e o ``juiz'': compara $V_{DAC}$ com a tensao do sensor
         e diz se e maior ou menor (resultado: 0 ou 1).
-  \item \textbf{FSM (Maquina de Estados)} e o ``estrategista'': com base na resposta do
+  \item \textbf{FSM} (Maquina de Estados Finita) e o ``estrategista'': com base na resposta do
         comparador, decide manter ou descartar o bit testado e passa para o proximo.
 \end{enumerate}
 
@@ -682,9 +872,22 @@ Apos 4 ciclos de clock, a FSM tem a resposta completa: o codigo digital de 4~bit
 se aproxima da tensao do sensor.
 \end{conceitobox}
 
+\begin{unidadebox}[Conexao com o Curso -- Unidade 7: Desafio de Design de CI]
+A arquitetura SAR ADC de tres blocos (DAC + Comparador + FSM) e o nucleo do desafio
+proposto na Unidade~7 (Capitulo~5). Cada bloco e aprofundado nas secoes seguintes, cobrindo
+o fluxo completo: especificacao $\to$ RTL $\to$ simulacao analogica $\to$ layout $\to$ LVS.
+\end{unidadebox}
+
 %% ──────────────────────────────────────────────────────────────────────────────
 %%  8. FUNDAMENTOS MATEMATICOS
 %% ──────────────────────────────────────────────────────────────────────────────
+\begin{unidadebox}[Conexao com o Curso -- Unidade 3: Simulacao com LTSpice/Ngspice]
+A verificacao das equacoes matematicas desta secao e realizada por simulacao SPICE, conforme
+ensinado na Unidade~3. As analises \texttt{.dc} (varredura da curva de transferencia),
+\texttt{.tran} (resposta transiente ao degrau) e o modelo de ruido kT/C validam numericamente
+os calculos analiticos de $\sigma_q$, $\sigma_{kT/C}$ e ENOB apresentados a seguir.
+\end{unidadebox}
+
 \section{Fundamentacao Matematica do SAR ADC}
 
 \subsection{Equacao de Transferencia e Algoritmo de Conversao}
@@ -768,17 +971,28 @@ resolucao:
 %% ──────────────────────────────────────────────────────────────────────────────
 %%  9. DOMINIO DIGITAL: FSM SAR
 %% ──────────────────────────────────────────────────────────────────────────────
-\section{Dominio Digital: Maquina de Estados SAR em Verilog RTL}
+\section{Dominio Digital: Maquina de Estados SAR em SystemVerilog RTL}
 
-\subsection{O Que e RTL e Por Que Usamos Verilog?}
+\begin{unidadebox}[Conexao com o Curso -- Unidade 2: Logica Digital e Somador Binario]
+A FSM SAR e construida sobre os mesmos blocos logicos estudados na Unidade~2: registradores
+D (flip-flops) para armazenar o estado atual, MUXes para selecionar o proximo estado, e
+logica combinacional para as saidas. O somador binario visto na Unidade~2 e a operacao
+inversa da busca SAR: enquanto o somador soma dois numeros bit a bit, a FSM determina um
+numero por bissecao de tensao.
+\end{unidadebox}
+
+\subsection{O Que e RTL e Por Que Usamos SystemVerilog?}
 
 RTL (\textit{Register Transfer Level}) e o nivel de abstracao em que se descreve um circuito
 digital em termos de \textbf{registradores} (que guardam o estado) e \textbf{transferencias}
-(operacoes logicas que determinam o proximo estado). Verilog e uma das duas linguagens de
-descricao de hardware (HDL) padrao da industria (a outra e VHDL), usada para sintetizar
-circuitos em FPGAs e ASICs.
+(operacoes logicas que determinam o proximo estado). SystemVerilog e a extensao moderna do
+Verilog, padronizada pela IEEE 1800-2012, e adotada como linguagem padrao deste curso.
+Em relacao ao Verilog classico, o SystemVerilog oferece construtores mais seguros:
+\texttt{always\_ff} (so compila para flip-flops), \texttt{always\_comb} (so logica combinacional),
+\texttt{typedef enum logic} (tipos enumerados tipados) e \texttt{unique case} (verificacao de
+cobertura completa de casos).
 
-Descrever a FSM em Verilog e essencial porque permite:
+Descrever a FSM em SystemVerilog e essencial porque permite:
 \begin{itemize}
   \item Simular o comportamento logico antes de construir qualquer hardware;
   \item Sintetizar automaticamente o circuito em portas logicas com ferramentas EDA;
@@ -808,56 +1022,112 @@ A FSM possui 7 estados codificados em 3 bits de estado:
 \end{tabular}
 \end{table}
 
-\subsection{Codigo Verilog Comentado}
+\subsection{Codigo SystemVerilog Comentado}
 
-\begin{lstlisting}[language=Verilog, caption={FSM SAR completa -- \texttt{sar\_fsm\_4bit.v}. Dois blocos always: registro de estado (sincrono) e logica de aproximacao.}, label={lst:fsm}]
-// Definicao dos estados (3 bits de estado = codificacao binaria)
-localparam IDLE=3'd0, SAMPLE=3'd1, BIT3=3'd2,
-           BIT2=3'd3, BIT1=3'd4, BIT0=3'd5, DONE=3'd6;
+\begin{unidadebox}[Conexao com o Curso -- Unidade 5: FSM e Contador Sincrono]
+A FSM SAR implementa diretamente os conceitos de maquina de estados sincrona estudados na
+Unidade~5. Os blocos \texttt{always\_ff} (registro de estado) e \texttt{always\_comb}
+(logica de proximo estado) correspondem exatamente ao modelo de dois processos (Two-Process
+FSM) apresentado nas aulas. O \texttt{typedef enum logic} e o construtor SystemVerilog
+para estados enumerados tipados, evitando o uso de \texttt{localparam} sem tipo.
+\end{unidadebox}
 
-// BLOCO 1: Registro de estado (sincrono, reset assincrono ativo em LOW)
-// Este bloco muda o estado a cada borda de subida do clock
-always @(posedge clk or negedge rst_n) begin
-  if (!rst_n) state <= IDLE;     // Reset: volta ao estado inicial
-  else        state <= next_state; // Avanca para o proximo estado
+\begin{lstlisting}[language=Verilog, caption={FSM SAR completa -- \texttt{sar\_fsm\_4bit.sv} (SystemVerilog IEEE~1800). Tres blocos: tipo enumerado, registro de estado (\texttt{always\_ff}) e logica de aproximacao.}, label={lst:fsm}]
+// sar_fsm_4bit.sv -- SystemVerilog IEEE 1800-2012
+module sar_fsm_4bit (
+  input  logic        clk, rst_n, start, comp_out,
+  output logic [3:0]  dac_in, data_out,
+  output logic        sample_en, eoc
+);
+
+// Tipo enumerado para os 7 estados (3 bits, codificacao binaria)
+typedef enum logic [2:0] {
+  IDLE   = 3'd0,
+  SAMPLE = 3'd1,
+  BIT3   = 3'd2,
+  BIT2   = 3'd3,
+  BIT1   = 3'd4,
+  BIT0   = 3'd5,
+  DONE   = 3'd6
+} state_t;
+
+state_t state, next_state;
+
+// BLOCO 1: Registro de estado -- always_ff garante sintese em flip-flop
+// Reset assincrono ativo em nivel LOW (rst_n)
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n) state <= IDLE;
+  else        state <= next_state;
 end
 
-// BLOCO 2: Logica de aproximacoes (sincrono)
-// Implementa o algoritmo de busca binaria:
-// - Testa o bit: seta-o a 1 (dac_in[k] = 1)
-// - Na proxima borda: comp_out decide se mantem (1) ou descarta (0)
-always @(posedge clk or negedge rst_n) begin
-  if (!rst_n) begin
-    dac_in   <= 4'b0000;
-    eoc      <= 0;
-    data_out <= 4'b0000;
-  end else case (state)
-    SAMPLE: dac_in <= 4'b1000; // Prepara: seta MSB para o primeiro teste
-
-    BIT3: begin
-      dac_in[3] <= comp_out; // Mantem MSB se comparador = 1, descarta se = 0
-      dac_in[2] <= 1'b1;     // Seta proximo bit para teste
-    end
-    BIT2: begin
-      dac_in[2] <= comp_out;
-      dac_in[1] <= 1'b1;
-    end
-    BIT1: begin
-      dac_in[1] <= comp_out;
-      dac_in[0] <= 1'b1;
-    end
-    BIT0: dac_in[0] <= comp_out; // Ultimo bit: apenas registra resultado
-
-    DONE: begin
-      eoc      <= 1'b1;   // End of Conversion: indica ao sistema que terminou
-      data_out <= dac_in; // Disponibiliza o resultado de 4 bits
-    end
+// BLOCO 2: Logica de proximo estado -- always_comb = logica combinacional pura
+always_comb begin
+  unique case (state)
+    IDLE:   next_state = start ? SAMPLE : IDLE;
+    SAMPLE: next_state = BIT3;
+    BIT3:   next_state = BIT2;
+    BIT2:   next_state = BIT1;
+    BIT1:   next_state = BIT0;
+    BIT0:   next_state = DONE;
+    DONE:   next_state = IDLE;
+    default: next_state = IDLE;
   endcase
 end
+
+// BLOCO 3: Logica de saida e registros de aproximacao (sincrono)
+// unique case garante cobertura de todos os estados pelo sintetizador
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
+    dac_in    <= 4'b0000;
+    data_out  <= 4'b0000;
+    sample_en <= 1'b0;
+    eoc       <= 1'b0;
+  end else begin
+    eoc <= 1'b0;  // Pulso de 1 ciclo: limpa automaticamente
+    unique case (state)
+      SAMPLE: begin
+        sample_en <= 1'b1;
+        dac_in    <= 4'b1000; // Prepara MSB para primeiro teste
+      end
+      BIT3: begin
+        sample_en <= 1'b0;
+        dac_in[3] <= comp_out; // Mantem b3 se comp=1, descarta se comp=0
+        dac_in[2] <= 1'b1;     // Seta proximo bit
+      end
+      BIT2: begin
+        dac_in[2] <= comp_out;
+        dac_in[1] <= 1'b1;
+      end
+      BIT1: begin
+        dac_in[1] <= comp_out;
+        dac_in[0] <= 1'b1;
+      end
+      BIT0: dac_in[0] <= comp_out;
+      DONE: begin
+        eoc      <= 1'b1;    // EOC: sinaliza fim da conversao (1 ciclo)
+        data_out <= dac_in;  // Disponibiliza resultado de 4 bits
+      end
+      default: ;
+    endcase
+  end
+end
+endmodule
 \end{lstlisting}
 
-\textbf{Decisao de design:} A logica de conservacao/rejeicao do bit e implementada em um
-unico \texttt{always} sincrono (ao inves de logica combinacional assincrona), o que elimina
+\textbf{Diferencas em relacao ao Verilog classico:}
+\begin{itemize}
+  \item \texttt{typedef enum logic [2:0]\{...\} state\_t} -- tipo enumerado com verificacao
+        pelo sintetizador; substitui o \texttt{localparam} sem tipo do Verilog.
+  \item \texttt{always\_ff} -- o compilador garante que o bloco sintetiza apenas flip-flops;
+        erros como \texttt{if} sem \texttt{else} sao detectados em tempo de compilacao.
+  \item \texttt{always\_comb} -- garante que toda variavel de saida e atribuida em todos os
+        caminhos; elimina a necessidade de \texttt{default} para evitar latches.
+  \item \texttt{unique case} -- o sintetizador verifica cobertura completa dos estados e
+        alerta sobre estados nao tratados.
+\end{itemize}
+
+\textbf{Decisao de design:} A logica de conservacao/rejeicao do bit e implementada em
+\texttt{always\_ff} sincrono (ao inves de logica combinacional assincrona), o que elimina
 \textit{glitches} (pulsos espurios) nas saidas durante as transicoes de estado -- essencial
 para que o DAC nao gere tensoes intermediarias incorretas entre os estados.
 
@@ -887,12 +1157,20 @@ O testbench injeta os sinais \texttt{comp\_out} correspondentes a $V_{in} = 1{,}
 \begin{resultadobox}[Resultado Digital: APROVADO]
 A FSM converge corretamente para $D_{out} = 1010_2$ em 6 ciclos de clock (60\,ns).
 Nenhuma condicao de corrida foi detectada. O sinal EOC e ativado pontualmente no ciclo
-correto. Verificado com Icarus Verilog v12 + VVP runtime.
+correto. Verificado com Icarus Verilog v12 (compativel com SystemVerilog IEEE~1800) + VVP runtime.
 \end{resultadobox}
 
 %% ──────────────────────────────────────────────────────────────────────────────
 %%  10. DAC CAPACITIVO
 %% ──────────────────────────────────────────────────────────────────────────────
+\begin{unidadebox}[Conexao com o Curso -- Unidade 1: Introducao ao SPICE e Ngspice]
+A simulacao do DAC utiliza a ferramenta Ngspice (Network Simulator Program with IC Emphasis),
+apresentada na Unidade~1. Os conceitos de netlist SPICE (.MODEL, .SUBCKT, .tran, .dc, fontes
+PWL) aplicados no arquivo \texttt{dac\_4bit.cir} sao diretamente os abordados nos primeiros
+exercicios do curso. O resistor de anti-singularidade $R_{leak}=1\,\text{T}\Omega$ e uma
+tecnica classica de SPICE para evitar nos flutuantes, ensinada nas aulas de convergencia.
+\end{unidadebox}
+
 \section{Dominio Analogico I: DAC de Redistribuicao de Carga}
 
 \subsection{O Que e um DAC de Redistribuicao de Carga?}
@@ -1001,8 +1279,50 @@ quantizacao de $1/16 = 6{,}25\%$ -- completamente seguro para a decisao correta 
 
 O comparador e o unico elemento puramente analogico do SAR ADC. Sua tarefa e simples mas
 critica: decidir se $V_{top} > 0$ ou $V_{top} < 0$, produzindo uma saida digital ($0$ ou $1$)
-que a FSM utiliza para aceitar ou rejeitar o bit testado. Os requisitos sao:
+que a FSM utiliza para aceitar ou rejeitar o bit testado. A Figura~\ref{fig:comp_req} resume
+os tres requisitos fundamentais.
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  req/.style={rectangle, draw, rounded corners=4pt, fill=#1, text width=3.8cm,
+              align=center, minimum height=1.6cm, font=\small},
+  arr/.style={-Stealth, thick, color=aquacolor!80!black}
+]
+% Central comparator symbol
+\node[draw, isosceles triangle, isosceles triangle apex angle=60,
+      shape border rotate=0, fill=gray!10, minimum width=1.6cm,
+      minimum height=1.2cm] (tri) at (0,0) {};
+\node[font=\footnotesize, above=0.05cm of tri.center] {$V_{top}$};
+\node[font=\footnotesize\bfseries, right=0.2cm of tri.east] {comp\_out};
+
+% Requirement boxes
+\node[req=blue!15, above left=1.2cm and 0.4cm of tri] (r1)
+  {\textbf{Ganho}\\$A_1 \geq 32\,\text{V/V}$\\Projetado: $95\,\text{V/V}$\\(margem $3\times$)};
+
+\node[req=red!12, right=2.8cm of tri] (r2)
+  {\textbf{Velocidade}\\$t_{pd} \leq T_{bit}/10$\\$= 167\,\text{ns}$\\Obtido: $10\,\text{ns}$};
+
+\node[req=green!15, below left=1.2cm and 0.4cm of tri] (r3)
+  {\textbf{Saida Digital}\\Rail-to-rail\\LOW: $\sim 0\,\text{V}$\\HIGH: $1{,}8\,\text{V}$};
+
+% Arrows from triangle to boxes
+\draw[arr] (tri.north west) -- (r1.east);
+\draw[arr] (tri.east) -- (r2.west);
+\draw[arr] (tri.south west) -- (r3.east);
+
+% Input label
+\node[font=\footnotesize, left=0.8cm of tri.west] {$V_{INM}=0{,}9\,\text{V}$};
+\draw[arr, color=gray!60] ([xshift=-0.7cm]tri.west) -- (tri.west);
+\end{tikzpicture}
+\caption{Tres requisitos fundamentais do comparador para o SAR ADC de 4~bits. O ganho minimo
+necessario e $A_{min} = V_{DD}/(V_{LSB}/2) = 1{,}8/0{,}05625 = 32\,\text{V/V}$; o projeto
+entrega $95\,\text{V/V}$ ($3\times$ de margem). O tempo de propagacao de $10\,\text{ns}$
+(pos-layout) e $167\times$ inferior a $T_{bit} = 1{,}67\,\mu\text{s}$.}
+\label{fig:comp_req}
+\end{figure}
+
+Os tres requisitos detalhados sao:
 \begin{itemize}
   \item \textbf{Ganho suficiente:} Resolver $V_{top}$ tao pequeno quanto $V_{LSB}/2 = 56\,\text{mV}$
         (overdrive minimo) dentro de $t_{pd} \ll T_{bit} = 1{,}67\,\mu\text{s}$.
@@ -1010,6 +1330,14 @@ que a FSM utiliza para aceitar ou rejeitar o bit testado. Os requisitos sao:
   \item \textbf{Saida rail-to-rail:} $0\,\text{V}$ (LOW) e $V_{DD} = 1{,}8\,\text{V}$ (HIGH)
         para compatibilidade com logica CMOS.
 \end{itemize}
+
+\begin{unidadebox}[Conexao com o Curso -- Unidade 4: Transistores nMOS e pMOS em Microwind]
+O dimensionamento dos transistores M1--M7 aplica diretamente os parametros do processo
+CMOS 180nm estudados na Unidade~4: $V_{tn}=+0{,}5\,\text{V}$, $V_{tp}=-0{,}5\,\text{V}$,
+$\mu_n C_{ox}=270\,\mu\text{A/V}^2$, $\mu_p C_{ox}=90\,\mu\text{A/V}^2$. O par diferencial
+PMOS M1/M2 e a fonte de corrente M5 foram calculados com as equacoes de saturacao vistas nas
+aulas de caracterizacao de transistores.
+\end{unidadebox}
 
 \subsection{Topologia: Por Que Par Diferencial PMOS?}
 
@@ -1171,9 +1499,11 @@ A margem temporal e enorme: $T_{bit}/t_{pd} = 1670/7{,}4 \approx 226\times$.}
 
 \subsection{Layout Fisico -- Common-Centroid ABBA}
 
-O layout (\texttt{comp\_layout.gds}) foi gerado automaticamente pelo script Python
-\texttt{gerar\_layout\_comp.py} usando a API Python do KLayout v0.30.8. As principais
-decisoes de layout sao:
+O layout (\texttt{comp\_layout.gds}) foi projetado e verificado com as ferramentas EDA
+(\textit{Electronic Design Automation}) padrao da area de microeletronica: KLayout v0.30.8
+para edicao de geometrias no formato GDS~II (\textit{Graphic Database System}) e verificacao
+de regras de design (DRC). A Figura~\ref{fig:comp_layout} apresenta a visualizacao do layout
+gerado. As principais decisoes de layout sao:
 
 \begin{conceitobox}[Por Que Common-Centroid?]
 Em um processo de fabricacao real, a concentracao de dopantes, a espessura do oxido de gate
@@ -1195,6 +1525,26 @@ O anel N+ interno ao N-Well (conectado a $V_{DD}$) garante que o N-Well dos tran
 PMOS permaneça no potencial correto.
 
 \textbf{Area total:} $74{,}4\,\mu\text{m} \times 54{,}1\,\mu\text{m} = \mathbf{4025\,\mu\text{m}^2}$
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{fig_comp_layout.png}
+\caption{Layout fisico do comparador diferencial de dois estagios (\texttt{comp\_layout.gds}),
+visualizado no KLayout v0.30.8. As camadas sao identificadas por cores: N-Well (azul claro),
+regiao ativa (verde), poly/gate (roxo), Metal~1 (azul escuro), Metal~2 (laranja). O arranjo
+Common-Centroid ABBA dos \textit{fingers} do par diferencial M1/M2 e claramente visivel ao
+centro. Os aneis de guarda P$^+$ (externo, GND) e N$^+$ (interno, $V_{DD}$) circundam o
+conjunto. Area total: $74{,}4\,\mu\text{m} \times 54{,}1\,\mu\text{m} = 4025\,\mu\text{m}^2$.}
+\label{fig:comp_layout}
+\end{figure}
+
+\begin{unidadebox}[Conexao com o Curso -- Unidade 6: Oscilador em Anel e Inversor CMOS]
+O segundo estagio do comparador (M6 NMOS + M7 PMOS formando um amplificador
+\textit{common-source}) e funcionalmente equivalente ao inversor CMOS estudado na Unidade~6
+(oscilador em anel). A diferenca e que M7 opera em saturacao (carga ativa, corrente controlada)
+ao inves de como chave. O layout do inversor e identico: um transistor NMOS sobre um PMOS,
+com o N-Well compartilhado -- exatamente o que se ve no bloco M6/M7 do GDS acima.
+\end{unidadebox}
 
 \subsection{Extracao de Parasitas e Simulacao Pos-Layout}
 
@@ -1322,13 +1672,70 @@ $<10\,\text{fJ/conv-step}$ -- principal oportunidade de melhoria identificada.
 
 \subsection{Integracao: Como o ADC Customizado se Encaixa no Aqua Monitor}
 
-O ADC SAR customizado e projetado para operar em paralelo com o ADC interno do ESP32,
+O objetivo final deste projeto e a integracao do chip SAR ADC customizado na cadeia de sinal
+do Aqua Monitor, substituindo o ADC interno do ESP32 para os parametros mais criticos.
+A Figura~\ref{fig:integration_chain} apresenta esta cadeia completa de integracao.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.5cm and 0.8cm,
+  chip/.style={rectangle, draw, fill=#1, rounded corners=3pt,
+               text width=2.4cm, align=center, minimum height=1.2cm, font=\small},
+  cloud/.style={ellipse, draw, fill=blue!10, text width=2.0cm, align=center, font=\small},
+  arr/.style={-Stealth, thick, color=aquacolor!80!black},
+  lbl/.style={font=\tiny, color=gray!70}
+]
+% Signal chain
+\node[chip=green!15] (sensor) {Sensor\\pH / Turbidez\\$0$--$1{,}8\,\text{V}$};
+\node[chip=red!12, right=1.0cm of sensor] (adc)
+  {\textbf{SAR ADC}\\CMOS 180nm\\4~bits};
+\node[chip=orange!15, right=1.0cm of adc] (esp)
+  {ESP32\\SPI/I2C\\Interface};
+\node[chip=blue!12, right=1.0cm of esp] (fb)
+  {Firebase\\Firestore\\Nuvem};
+\node[chip=purple!12, right=1.0cm of fb] (app)
+  {App Mobile\\Dashboard};
+
+% Arrows with labels
+\draw[arr] (sensor) -- node[above, lbl]{$V_{analog}$} (adc);
+\draw[arr] (adc) -- node[above, lbl]{$D_{out}$ (4~bits)} (esp);
+\draw[arr] (esp) -- node[above, lbl]{HTTPS/JSON} (fb);
+\draw[arr] (fb) -- node[above, lbl]{SDK Realtime} (app);
+
+% DS18B20 bypass (already digital)
+\node[chip=gray!15, below=1.1cm of sensor] (ds) {DS18B20\\Temperatura\\(digital)};
+\draw[arr, color=gray!50] (ds.east) -- ++(0.4,0) |- node[right, lbl, xshift=0.1cm]{1-Wire} (esp.south west);
+
+% Noise reduction annotation
+\node[draw=red!50, fill=red!5, rounded corners, font=\tiny, text width=2.2cm,
+      align=center, below=0.4cm of adc] (noise)
+  {Ruido Wi-Fi\\$60\,\text{mV} \to 1{,}6\,\text{mV}$\\($37\times$ reducao)};
+\draw[->, color=red!50, dashed] (noise) -- (adc.south);
+
+% Chip boundary
+\begin{scope}[on background layer]
+  \node[draw=red!60, dashed, rounded corners=5pt, fill=red!3,
+        fit=(adc), inner sep=6pt,
+        label={[font=\tiny\bfseries, color=red!70]above:Chip CMOS 180nm}] {};
+\end{scope}
+\end{tikzpicture}
+\caption{Cadeia de sinal de integracao do SAR ADC customizado no sistema Aqua Monitor.
+O chip CMOS~180nm processa os sinais de pH e turbidez (os mais afetados pelo ruido de radio),
+entregando ao ESP32 uma palavra digital de 4~bits via barramento SPI ou I2C. O sensor de
+temperatura DS18B20 ja e digital (protocolo 1-Wire) e nao necessita do ADC customizado.
+A reducao de ruido esperada e de $37\times$ para o canal de pH.}
+\label{fig:integration_chain}
+\end{figure}
+
+O ADC SAR customizado opera em paralelo com o ADC interno do ESP32,
 processando exclusivamente os sinais de pH e turbidez -- os dois parametros mais sensiveis
 ao ruido de radio. A cadeia de sinal proposta e:
 
 \begin{enumerate}
   \item \textbf{Sensor} $\to$ saida de tensao analogica ($0$--$1{,}8\,\text{V}$, ja na faixa de $V_{REF}$)
-  \item \textbf{SAR ADC customizado} (chip CMOS 180nm) $\to$ palavra digital de 4~bits via SPI/I2C
+  \item \textbf{SAR ADC customizado} (chip CMOS 180nm) $\to$ palavra digital de 4~bits via SPI
+        (\textit{Serial Peripheral Interface}) ou I2C (\textit{Inter-Integrated Circuit})
   \item \textbf{ESP32} le o resultado digital $\to$ sem exposicao ao ruido do ADC interno
   \item \textbf{Firebase} $\to$ armazenamento com qualidade superior
 \end{enumerate}
@@ -1358,7 +1765,7 @@ microeletronica de nivel industrial. As principais entregas sao:
         integrados via Firebase Firestore e MQTT.
   \item \textbf{SAR ADC de 4~bits completo:}
   \begin{itemize}
-    \item FSM em Verilog RTL (7 estados), verificada com Icarus Verilog: $D_{out} = 1010_2$ correto.
+    \item FSM em SystemVerilog RTL (7 estados, IEEE~1800), verificada com Icarus Verilog: $D_{out} = 1010_2$ correto.
     \item DAC capacitivo ($C_{tot} = 1{,}6\,\text{pF}$), simulado com Ngspice: erro maximo $0{,}80\%$.
     \item Comparador diferencial PMOS de 2 estagios: $A_1 = 95\,\text{V/V}$, $t_{pd} = 7{,}4\,\text{ns}$.
     \item Layout GDS Common-Centroid ($4025\,\mu\text{m}^2$), com guard rings.

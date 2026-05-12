@@ -1,0 +1,8 @@
+\babel@toc {brazil}{}\relax 
+\contentsline {figure}{\numberline {1}{\ignorespaces Diagrama de blocos do HammingChip v1.0: fluxo transmissor--canal--receptor.}}{11}{figure.caption.3}%
+\contentsline {figure}{\numberline {2}{\ignorespaces Tabela de resultados da simulação funcional: 30/30 testes aprovados.}}{11}{figure.caption.4}%
+\contentsline {figure}{\numberline {3}{\ignorespaces Formas de onda da simulação funcional geradas a partir do arquivo \texttt {dump\_hamming.vcd} (Icarus Verilog / GTKWave). A linha vertical pontilhada em 64\,ns marca a transição da Fase~1 (round-trip sem erro) para a Fase~2 (injeção de erro): na Fase~2, \texttt {error\_flag} sobe para 1 e \texttt {syndrome} exibe o valor não-nulo indicando a posição do bit errado.}}{12}{figure.caption.5}%
+\contentsline {figure}{\numberline {4}{\ignorespaces Demonstração visual do processo de detecção e correção de erro: codeword transmitido, codeword recebido (com erro no bit 5), síndrome calculada, e codeword corrigido.}}{13}{figure.caption.7}%
+\contentsline {figure}{\numberline {5}{\ignorespaces \textit {Floorplan} estimado do HammingChip v1.0: blocos encoder, decoder e pads de I/O.}}{14}{figure.caption.9}%
+\contentsline {figure}{\numberline {6}{\ignorespaces Relatório de verificação DRC e LVS: zero violações detectadas.}}{15}{figure.caption.10}%
+\contentsline {figure}{\numberline {7}{\ignorespaces Comparação pré-\textit {layout} vs.\ pós-\textit {layout}: atraso de propagação e impacto de capacitâncias parasitas.}}{15}{figure.caption.11}%

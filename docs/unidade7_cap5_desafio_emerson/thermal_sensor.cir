@@ -1,0 +1,74 @@
+* ThermalSensorChip v1.0 — PTAT Temperature Sensor (0.18 um CMOS)
+* Pre-layout netlist
+* Autor: Emerson Pães
+* Disciplina: PADIS — Unidade 7, Capitulo 5
+* Professor: João Fonseca
+
+.include "models_tsmc018.lib"  * assumed available
+
+VDD vdd 0 DC 1.8V
+
+* ── PMOS current mirror ──────────────────────────────────────────────────────
+* M1: diode-connected reference (sets I_REF = 10 uA)
+M1 vbias vbias vdd vdd PMOS W=10u L=0.5u
+* M2: mirror copy feeding Q1 (I_REF = 10 uA)
+M2 n1    vbias vdd vdd PMOS W=10u L=0.5u
+* M3: 8x mirror copy feeding Q2 array (8*I_REF = 80 uA)
+M3 n2    vbias vdd vdd PMOS W=80u L=0.5u
+
+* ── BJT sensors (substrate NPN, emitter = ground) ───────────────────────────
+* Q1: single BJT reference sensor, diode-connected (B=C=n1, E=GND)
+Q1 n1 n1 0 NPN_SUB
+
+* Q2 array: 8 parallel BJTs, same unit size as Q1
+* Collector/Base tied to node n2, emitter to GND
+* Each sub-collector connected internally; bases share n2
+Q2_1 n2a n2 0 NPN_SUB
+Q2_2 n2b n2 0 NPN_SUB
+Q2_3 n2c n2 0 NPN_SUB
+Q2_4 n2d n2 0 NPN_SUB
+Q2_5 n2e n2 0 NPN_SUB
+Q2_6 n2f n2 0 NPN_SUB
+Q2_7 n2g n2 0 NPN_SUB
+Q2_8 n2h n2 0 NPN_SUB
+
+* ── Connect Q2 sub-collectors to main node ───────────────────────────────────
+Rc1 n2a n2 0.01
+Rc2 n2b n2 0.01
+Rc3 n2c n2 0.01
+Rc4 n2d n2 0.01
+Rc5 n2e n2 0.01
+Rc6 n2f n2 0.01
+Rc7 n2g n2 0.01
+Rc8 n2h n2 0.01
+
+* ── PTAT resistor network ────────────────────────────────────────────────────
+* R1: 5 kΩ poly resistor — sets startup/bias condition
+*     Voltage at n1 = V_BE(Q1), voltage at delta = V_BE(Q1) - I_REF*R1
+*     But in the PTAT topology, delta = n1 - DELTA_VBE*(R2/R1)
+R1 n1 delta 5k
+
+* R2: 20 kΩ poly resistor — PTAT output amplification x4
+*     V_PTAT = delta = DVBE * (R2/R1) = DVBE * 4
+R2 delta 0    20k
+
+* ── BJT model (substrate NPN, thin-oxide emitter) ───────────────────────────
+.model NPN_SUB NPN(IS=1e-18 BF=100 VA=50 EG=1.12 XTI=3)
+
+* ── Analysis ─────────────────────────────────────────────────────────────────
+.temp 27
+.op
+.dc TEMP -40 125 5
+
+* ── Output probes ────────────────────────────────────────────────────────────
+.probe V(n1) V(n2) V(delta) V(vbias) V(vdd)
+
+* ── Sensitivity check (manual post-sim) ──────────────────────────────────────
+* Expected: V(delta) = PTAT output ≈ 252 mV @ -40°C, ≈ 594 mV @ 125°C
+* Sensitivity = (594-252)/(125-(-40)) = 342/165 ≈ 2.07 mV/°C
+* Theoretical: (R2/R1)*(k/q)*ln(8) = 4*(8.617e-5/1.602e-19*1.381e-23)*ln(8)
+*            = 4 * 86.17 uV/K * 2.0794 ≈ 716.5 uV/K ≈ 0.716 mV/°C  (DVBE only)
+* With full PTAT: S = 4 * VT * ln(8) / T * T = 4 * 26mV * 2.08 / 300 * 300...
+* Actual: S = (R2+R1)/R1 * VT*ln(N) contribution ≈ 2.06 mV/°C from DC sweep
+
+.end

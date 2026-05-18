@@ -48,6 +48,7 @@
 
 % ---- Headers/Footers ----
 \usepackage{fancyhdr}
+\setlength{\headheight}{14pt}
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\textcolor{bwdark}{AquaMonitorSoC v1.0}}
@@ -60,7 +61,7 @@
 \renewcommand{\footrulewidth}{0.4pt}
 
 % ---- Hyperlinks ----
-\usepackage[hidelinks]{hyperref}
+\usepackage[hidelinks,bookmarks=false]{hyperref}
 
 % ---- Captions ----
 \usepackage{caption}
@@ -654,7 +655,7 @@ A célula de temperatura utiliza a propriedade Proporcional à Temperatura Absol
 \newpage
 
 % ============================================================
-\section{Design Analógico  --  SAR ADC}
+\section{Design Analógico: SAR ADC}
 \label{sec:analog}
 % ============================================================
 
@@ -760,7 +761,7 @@ permanecendo dentro da especificação em todos os casos.
 \newpage
 
 % ============================================================
-\section{Design Digital  --  FSM de Controle SAR}
+\section{Design Digital: FSM de Controle SAR}
 \label{sec:fsm}
 % ============================================================
 
@@ -862,7 +863,7 @@ de timing para o caminho crítico são:
   \end{tabular}
 \end{table}
 
-\subsection{Código RTL  --  sar\_ctrl\_fsm.sv}
+\subsection{Código RTL: sar\_ctrl\_fsm.sv}
 
 \begin{svcode}{sar\_ctrl\_fsm.sv -- Módulo FSM SAR}
 // AquaMonitorSoC v1.0 -- SAR ADC Control FSM
@@ -961,7 +962,7 @@ No modo Mode-0, a amostragem do MOSI ocorre na borda de subida do SCLK e
 a atualização do MISO ocorre na borda de descida. O registrador de transmissão
 é pré-carregado com \texttt{data\_in} quando CS\_n está desassertado (nível alto).
 
-\subsection{Código RTL  --  spi\_slave.sv (parcial)}
+\subsection{Código RTL: spi\_slave.sv (parcial)}
 
 \begin{svcode}{spi\_slave.sv -- Interface SPI Escravo 16-bit}
 // AquaMonitorSoC v1.0 -- SPI Slave Interface

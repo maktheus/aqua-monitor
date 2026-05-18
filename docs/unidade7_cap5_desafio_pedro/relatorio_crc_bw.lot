@@ -1,0 +1,8 @@
+\babel@toc {brazil}{}\relax 
+\contentsline {table}{\numberline {1}{\ignorespaces Estimativa de área do CRCChip v1.0}}{11}{table.caption.3}%
+\contentsline {table}{\numberline {2}{\ignorespaces Seleção de 15 vetores de teste do CRCChip v1.0 --- CRC-8/SMBUS}}{16}{table.caption.9}%
+\contentsline {table}{\numberline {3}{\ignorespaces Atraso por estágio do CRCChip v1.0 --- pré-layout (processo CMOS 0,35\,\textmu m)}}{17}{table.caption.12}%
+\contentsline {table}{\numberline {4}{\ignorespaces Parasitas RC extraídos por estágio do CRCChip v1.0 (CMOS 0,35\,\textmu m, metal-1)}}{20}{table.caption.17}%
+\contentsline {table}{\numberline {5}{\ignorespaces Atraso de propagação pré e pós-layout por estágio do CRCChip v1.0}}{22}{table.caption.18}%
+\contentsline {table}{\numberline {6}{\ignorespaces Resultado da verificação LVS e DRC por bloco do CRCChip v1.0}}{24}{table.caption.19}%
+\contentsline {table}{\numberline {7}{\ignorespaces Comparação do CRCChip v1.0 com implementações CRC-8 da literatura}}{25}{table.caption.20}%

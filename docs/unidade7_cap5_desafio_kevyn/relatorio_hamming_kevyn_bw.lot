@@ -1,0 +1,9 @@
+\babel@toc {brazil}{}\relax 
+\contentsline {table}{\numberline {1}{\ignorespaces Parâmetros do processo CMOS 0,35\,\textmu m}}{7}{table.caption.1}%
+\contentsline {table}{\numberline {2}{\ignorespaces Tabela de verdade completa do Hamming Encoder: 16 codewords de saída}}{13}{table.caption.7}%
+\contentsline {table}{\numberline {3}{\ignorespaces Mapeamento síndrome $\to $ posição de erro para $d = 1011_2$ (golden model)}}{16}{table.caption.10}%
+\contentsline {table}{\numberline {4}{\ignorespaces Extração de capacitâncias parasitas por nó crítico (Metal-1, CMOS 0,35\,\textmu m)}}{19}{table.caption.16}%
+\contentsline {table}{\numberline {5}{\ignorespaces Análise de \textit {timing} pré-layout vs.\ pós-layout --- caminho crítico XOR}}{21}{table.caption.17}%
+\contentsline {table}{\numberline {6}{\ignorespaces Inventário de células e redes para verificação LVS}}{22}{table.caption.19}%
+\contentsline {table}{\numberline {7}{\ignorespaces Estimativa de células lógicas após síntese para CMOS 0,35\,\textmu m}}{23}{table.caption.21}%
+\contentsline {table}{\numberline {8}{\ignorespaces Comparação do HammingChip v1.0 com implementações Hamming(7,4) da literatura}}{24}{table.caption.22}%

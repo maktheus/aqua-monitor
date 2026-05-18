@@ -1,0 +1,59 @@
+// AquaMonitorSoC v1.0 -- SAR ADC Control FSM
+// Moore FSM, 8 states, 4-bit successive approximation
+`timescale 1ns/1ps
+module sar_ctrl_fsm (
+    input  logic        clk, rst_n, start, comparator_out,
+    output logic [3:0]  dac_code,
+    output logic        sample_en, eoc,
+    output logic [3:0]  result
+);
+    localparam [3:0] IDLE=0, CH_SEL=1, SAMPLE=2,
+                     BIT3=3, BIT2=4, BIT1=5, BIT0=6, DONE=7;
+    logic [3:0] state, next_state;
+    logic [3:0] trial_reg;
+
+    // State register
+    always_ff @(posedge clk or negedge rst_n)
+        if (!rst_n) state <= IDLE; else state <= next_state;
+
+    // Next-state logic (combinational)
+    always_comb begin
+        next_state = IDLE;
+        case (state)
+            IDLE  : next_state = start ? CH_SEL : IDLE;
+            CH_SEL: next_state = SAMPLE;
+            SAMPLE: next_state = BIT3;
+            BIT3  : next_state = BIT2;
+            BIT2  : next_state = BIT1;
+            BIT1  : next_state = BIT0;
+            BIT0  : next_state = DONE;
+            DONE  : next_state = IDLE;
+        endcase
+    end
+
+    // Trial register update (SAR algorithm)
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) trial_reg <= 4'b0000;
+        else case (state)
+            CH_SEL: trial_reg <= 4'b0000;
+            SAMPLE: trial_reg <= 4'b1000;
+            BIT3: begin trial_reg[3]<=comparator_out; trial_reg[2]<=1'b1; end
+            BIT2: begin trial_reg[2]<=comparator_out; trial_reg[1]<=1'b1; end
+            BIT1: begin trial_reg[1]<=comparator_out; trial_reg[0]<=1'b1; end
+            BIT0: trial_reg[0] <= comparator_out;
+        endcase
+    end
+
+    // Moore outputs
+    always_comb begin
+        sample_en=1'b0; eoc=1'b0; dac_code=trial_reg;
+        case (state)
+            SAMPLE: begin sample_en=1'b1; dac_code=4'b1000; end
+            DONE  : eoc = 1'b1;
+        endcase
+    end
+
+    // Result latch
+    always_ff @(posedge clk or negedge rst_n)
+        if (!rst_n) result<=4'b0; else if (state==DONE) result<=trial_reg;
+endmodule

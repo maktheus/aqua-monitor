@@ -1,0 +1,13 @@
+\babel@toc {brazil}{}\relax 
+\contentsline {figure}{\numberline {1}{\ignorespaces Esquerda: protótipo do sistema de monitoramento em bancada. Direita: coleta de amostras de água para calibração dos sensores.}}{7}{figure.caption.6}%
+\contentsline {figure}{\numberline {2}{\ignorespaces Arquitetura completa do AquaMonitorSoC v1.0. Blocos sensoriais (esquerda), domínio analógico interno (centro) e domínio digital (direita).}}{9}{figure.caption.7}%
+\contentsline {figure}{\numberline {3}{\ignorespaces Floorplan do AquaMonitorSoC v1.0. Die de 800$\times $\SI {600}{\micro \meter } com separação de domínios analógico (esq.) e digital (dir.).}}{13}{figure.caption.11}%
+\contentsline {figure}{\numberline {4}{\ignorespaces Análise de tradeoffs: resolução vs. área (esq.), latência vs. número de canais (centro), comparação de arquiteturas em radar (dir.).}}{14}{figure.caption.12}%
+\contentsline {figure}{\numberline {5}{\ignorespaces Circuitos de condicionamento dos três canais sensoriais: pH (esq.), condutividade (centro) e temperatura PTAT (dir.).}}{16}{figure.caption.14}%
+\contentsline {figure}{\numberline {6}{\ignorespaces Esquerda: esquemático do comparador dinâmico (CMOS 180nm). Direita: resposta transiente -- saída latch em função de $\Delta V_{in}$.}}{19}{figure.caption.16}%
+\contentsline {figure}{\numberline {7}{\ignorespaces Diagrama de estados da FSM SAR -- 8 estados Moore. As saídas de cada estado estão indicadas dentro dos círculos.}}{21}{figure.caption.19}%
+\contentsline {figure}{\numberline {8}{\ignorespaces Diagrama de timing SAR -- duas conversões completas. pH (código 0110) e condutividade (código 1001).}}{23}{figure.caption.21}%
+\contentsline {figure}{\numberline {9}{\ignorespaces Visão de sistema do AquaMonitorSoC v1.0 -- interconexão dos blocos conforme implementado no top-level.}}{27}{figure.caption.24}%
+\contentsline {figure}{\numberline {10}{\ignorespaces Resultados de simulação: rampa de tensão nos 3 canais (topo), saída DAC em escada, código digital e pulsos EOC (base).}}{31}{figure.caption.26}%
+\contentsline {figure}{\numberline {11}{\ignorespaces Timing SAR -- conversão 1 (pH, código 0110) e conversão 2 (condutividade, código 1001).}}{33}{figure.caption.29}%
+\contentsline {figure}{\numberline {12}{\ignorespaces Vista de layout simulada -- camadas de difusão, poli, Metal1 e Metal2. Canais de roteamento entre blocos e escala de \SI {100}{\micro \meter }.}}{34}{figure.caption.30}%

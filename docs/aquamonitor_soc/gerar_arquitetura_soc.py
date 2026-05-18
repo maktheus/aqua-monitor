@@ -1,168 +1,174 @@
 """
-gerar_arquitetura_soc.py
-Full SoC block diagram for AquaMonitorSoC v1.0
-Black/white matplotlib, 14x10 figure
+gerar_arquitetura_soc.py — AquaMonitorSoC v1.0
+Block diagram redesigned to avoid overlaps: clean grid layout.
 """
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+from matplotlib.patches import FancyBboxPatch
+import matplotlib.patheffects as pe
 
-fig, ax = plt.subplots(figsize=(14, 10))
-ax.set_xlim(0, 14)
-ax.set_ylim(0, 10)
+fig, ax = plt.subplots(figsize=(16, 11))
+ax.set_xlim(0, 16)
+ax.set_ylim(0, 11)
 ax.axis('off')
+fig.patch.set_facecolor('white')
 
-# ---- Helper functions ----
-def box(ax, x, y, w, h, label, sublabel='', fc='white', ec='black', lw=1.5, fontsize=9):
-    rect = FancyBboxPatch((x, y), w, h,
-                          boxstyle="round,pad=0.05",
-                          facecolor=fc, edgecolor=ec, linewidth=lw)
-    ax.add_patch(rect)
-    if sublabel:
-        ax.text(x + w/2, y + h*0.65, label, ha='center', va='center',
-                fontsize=fontsize, fontweight='bold')
-        ax.text(x + w/2, y + h*0.30, sublabel, ha='center', va='center',
-                fontsize=7, color='#444444')
+# ─── helpers ───────────────────────────────────────────────────────────────────
+def box(ax, x, y, w, h, title, sub='', fc='white', ec='black', lw=1.5, ts=9, ss=7):
+    r = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.07",
+                       fc=fc, ec=ec, lw=lw, zorder=3)
+    ax.add_patch(r)
+    cx, cy = x + w/2, y + h/2
+    if sub:
+        ax.text(cx, cy + h*0.18, title, ha='center', va='center',
+                fontsize=ts, fontweight='bold', zorder=4)
+        ax.text(cx, cy - h*0.20, sub, ha='center', va='center',
+                fontsize=ss, color='#444', zorder=4)
     else:
-        ax.text(x + w/2, y + h/2, label, ha='center', va='center',
-                fontsize=fontsize, fontweight='bold')
+        ax.text(cx, cy, title, ha='center', va='center',
+                fontsize=ts, fontweight='bold', zorder=4)
 
-def arrow(ax, x1, y1, x2, y2, label='', lw=1.2):
+def arr(ax, x1, y1, x2, y2, lbl='', lpos=0.45, loffx=0, loffy=0.13, lw=1.3):
     ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
-                arrowprops=dict(arrowstyle='->', color='black', lw=lw))
-    if label:
-        mx, my = (x1+x2)/2, (y1+y2)/2
-        ax.text(mx, my + 0.12, label, ha='center', va='bottom', fontsize=7,
-                style='italic', color='#222222')
+                arrowprops=dict(arrowstyle='->', color='black', lw=lw,
+                                connectionstyle='arc3,rad=0.0'))
+    if lbl:
+        mx = x1 + (x2-x1)*lpos + loffx
+        my = y1 + (y2-y1)*lpos + loffy
+        ax.text(mx, my, lbl, ha='center', va='bottom', fontsize=7,
+                style='italic', color='#222',
+                bbox=dict(boxstyle='round,pad=0.1', fc='white', alpha=0.9, ec='none'),
+                zorder=5)
 
-# ===== TITLE =====
-ax.text(7, 9.6, 'AquaMonitorSoC v1.0 — Mixed-Signal SoC Architecture',
-        ha='center', va='center', fontsize=13, fontweight='bold')
-ax.text(7, 9.25, 'SAR ADC 4-bit · 3 Canais · CMOS TSMC 180nm · VDD=1.8V',
-        ha='center', va='center', fontsize=9, color='#333333')
+def domain(ax, x, y, w, h, lbl, ls='--', lw=1.2, fc='none', ec='#888'):
+    r = plt.Rectangle((x, y), w, h, fill=(fc != 'none'),
+                       fc=fc, ec=ec, lw=lw, ls=ls, zorder=1)
+    ax.add_patch(r)
+    ax.text(x + w/2, y + h + 0.15, lbl, ha='center', va='bottom',
+            fontsize=8, fontweight='bold', color='#555', zorder=5)
 
-# ===== CLOCK DIVIDER (top center) =====
-box(ax, 5.5, 8.2, 3.0, 0.75, 'Clock Divider  /8',
-    '8 MHz → 1 MHz ADC Clock', fc='#f5f5f5', fontsize=8)
-arrow(ax, 5.5, 8.57, 4.2, 8.57, '8MHz', lw=1)
-ax.text(4.0, 8.57, '8MHz\nclk_8mhz', ha='right', va='center', fontsize=7)
-arrow(ax, 8.5, 8.57, 9.2, 8.57, '1MHz', lw=1)
-ax.text(9.3, 8.57, 'clk_1mhz', ha='left', va='center', fontsize=7)
+# ─── title ─────────────────────────────────────────────────────────────────────
+ax.text(8, 10.65, 'AquaMonitorSoC v1.0 — Arquitetura do Sistema',
+        ha='center', fontsize=14, fontweight='bold')
+ax.text(8, 10.30, 'SAR ADC 4-bit Time-Multiplexed · 3 Canais Sensoriais · CMOS TSMC 180nm · VDD = 1.8V',
+        ha='center', fontsize=9, color='#333')
 
-# ===== SENSOR DOMAIN (left) =====
-ax.text(1.0, 7.9, 'SENSOR DOMAIN', ha='center', va='center',
-        fontsize=8, fontweight='bold', color='#555555')
-# Dashed boundary for sensor domain
-rect_sens = plt.Rectangle((0.1, 4.3), 2.5, 3.5,
-                           fill=False, linestyle='--', edgecolor='gray', lw=1.2)
-ax.add_patch(rect_sens)
+# ─── COLUMN 1: sensors (x 0.3 – 2.5) ─────────────────────────────────────────
+domain(ax, 0.2, 1.9, 2.4, 5.8, 'DOMÍNIO SENSOR')
+box(ax, 0.4, 6.8, 1.9, 0.75, 'Sensor pH',      '0–14 pH | 0–1.8V', fc='#f5f5f5', ts=8, ss=7)
+box(ax, 0.4, 5.6, 1.9, 0.75, 'Condutividade',  '0–2000µS/cm | 0–1.8V', fc='#f5f5f5', ts=8, ss=7)
+box(ax, 0.4, 4.4, 1.9, 0.75, 'Temp. PTAT',    '−40..125°C | 0–1.8V', fc='#f5f5f5', ts=8, ss=7)
+box(ax, 0.4, 2.2, 1.9, 0.75, 'Cond. Front-End','TIA / AC+Rect / Buffer', fc='#f5f5f5', ts=8, ss=7)
 
-box(ax, 0.25, 6.8, 1.7, 0.7, 'pH Sensor', '0–14 pH / 0–1.8V', fc='#f0f0f0', fontsize=7)
-box(ax, 0.25, 5.85, 1.7, 0.7, 'Conductivity', '0–2000µS/cm / 0–1.8V', fc='#f0f0f0', fontsize=7)
-box(ax, 0.25, 4.90, 1.7, 0.7, 'Temp PTAT', '−40..125°C / 0–1.8V', fc='#f0f0f0', fontsize=7)
+# ─── COLUMN 2: analog domain (x 2.9 – 5.5) ────────────────────────────────────
+domain(ax, 2.8, 1.9, 2.8, 5.8, 'DOMÍNIO ANALÓGICO', ec='#333', lw=1.5)
+box(ax, 3.0, 6.8, 2.3, 0.75, '3:1 MUX Analógico',  'sel[2:0] controle digital', fc='white', ts=8, ss=7)
+box(ax, 3.0, 5.6, 2.3, 0.75, 'Comparador Dinâmico', '2-estágio, offset < 2mV', fc='white', ts=8, ss=7)
+box(ax, 3.0, 4.4, 2.3, 0.75, 'DAC Capacitivo 4-bit', 'C_unit=20fF, R-2R ladder', fc='white', ts=8, ss=7)
+box(ax, 3.0, 2.2, 2.3, 0.75, 'Ref. Bandgap',         '1.2V ±0.1%, PTAT curr.', fc='#eee', ts=8, ss=7)
 
-# Sensor arrows to MUX
-arrow(ax, 1.95, 7.15, 3.0, 6.85, 'VpH')
-arrow(ax, 1.95, 6.20, 3.0, 6.45, 'Vcond')
-arrow(ax, 1.95, 5.25, 3.0, 6.10, 'Vtemp')
+# ─── COLUMN 3: digital domain (x 5.9 – 10.5) ─────────────────────────────────
+domain(ax, 5.8, 1.9, 4.8, 5.8, 'DOMÍNIO DIGITAL', ec='#111', lw=1.8)
+box(ax, 6.0, 6.8, 2.4, 0.75, 'SAR FSM',       'Moore, 8 estados', fc='#e0e0e0', ts=9, ss=7)
+box(ax, 6.0, 5.6, 2.4, 0.75, 'Reg. Resultado', 'result[3:0], status[7:0]', fc='white', ts=8, ss=7)
+box(ax, 6.0, 4.4, 2.4, 0.75, 'Sequenciador',   'ch_sel[1:0], round-robin', fc='white', ts=8, ss=7)
+box(ax, 6.0, 3.2, 2.4, 0.75, 'Divisor Clock',  '8MHz → 1MHz (/8)', fc='#e0e0e0', ts=8, ss=7)
+box(ax, 6.0, 2.2, 2.4, 0.75, 'SPI Slave',      '16-bit: CH|RESULT|STATUS', fc='#e0e0e0', ts=8, ss=7)
 
-# ===== ANALOG DOMAIN (center-left) =====
-ax.text(4.5, 7.9, 'ANALOG DOMAIN', ha='center', va='center',
-        fontsize=8, fontweight='bold', color='#555555')
-rect_ana = plt.Rectangle((2.8, 4.3), 3.5, 3.5,
-                          fill=False, linestyle='--', edgecolor='#333333', lw=1.5)
-ax.add_patch(rect_ana)
+# ─── COLUMN 4: SPI interface (x 11.0 – 13.5) ──────────────────────────────────
+domain(ax, 10.9, 3.0, 2.8, 5.0, 'INTERFACE SPI', ls='--', ec='#888')
+box(ax, 11.1, 6.8, 2.4, 0.75, 'MCU / Host',  'SPI Master externo', fc='#f5f5f5', ts=8, ss=7)
+box(ax, 11.1, 5.2, 2.4, 0.75, 'SPI Bus',     'SCLK / MOSI / MISO / CS_n', fc='white', ts=8, ss=7)
+box(ax, 11.1, 3.2, 2.4, 0.75, 'LED / Status','led_ready, eoc pulse', fc='white', ts=8, ss=7)
 
-# MUX
-box(ax, 3.0, 6.3, 1.4, 0.9, '3:1 Analog\nMUX', fc='white', fontsize=8)
-# Comparator
-box(ax, 3.0, 5.05, 1.4, 0.9, 'Dynamic\nComparator', fc='white', fontsize=8)
-# DAC
-box(ax, 3.0, 4.35, 1.4, 0.55, '4-bit Cap DAC', fc='white', fontsize=8)
+# ─── external clock ───────────────────────────────────────────────────────────
+box(ax, 5.9, 9.3, 2.4, 0.55, 'Divisor Clock  8MHz→1MHz', fc='#eee', ts=8, lw=1.2)
+ax.annotate('', xy=(5.9, 9.57), xytext=(4.8, 9.57),
+            arrowprops=dict(arrowstyle='->', color='black', lw=1.1))
+ax.text(4.7, 9.57, 'clk_8mhz', ha='right', va='center', fontsize=7)
+ax.annotate('', xy=(7.3, 9.3), xytext=(7.3, 8.2),
+            arrowprops=dict(arrowstyle='->', color='black', lw=1.1))
+ax.text(7.5, 8.75, 'clk_1mhz', ha='left', va='center', fontsize=7)
 
-# MUX → Comparator
-arrow(ax, 3.7, 6.3, 3.7, 5.95, 'VIN')
-# Comparator → FSM
-arrow(ax, 4.4, 5.5, 5.4, 5.5, 'comp_out')
-# DAC → Comparator
-arrow(ax, 3.7, 4.9, 3.7, 5.05, 'VDAC')
-# MUX ctrl
-arrow(ax, 5.55, 6.0, 4.4, 6.65, 'mux_sel[2:0]')
+# ─── sensor → conditioning ───────────────────────────────────────────────────
+arr(ax, 1.35, 6.8,  1.35, 2.95,  '', lw=1.0)   # pH down to front-end
+arr(ax, 1.7,  5.6,  1.7,  2.95,  '', lw=1.0)   # cond
+arr(ax, 2.1,  4.4,  2.1,  2.95,  '', lw=1.0)   # temp
 
-# ===== DIGITAL DOMAIN (center-right) =====
-ax.text(7.6, 7.9, 'DIGITAL DOMAIN', ha='center', va='center',
-        fontsize=8, fontweight='bold', color='#555555')
-rect_dig = plt.Rectangle((5.3, 4.3), 4.5, 3.5,
-                          fill=False, linestyle='-', edgecolor='#111111', lw=1.5)
-ax.add_patch(rect_dig)
+# ─── conditioning → MUX ───────────────────────────────────────────────────────
+arr(ax, 2.30, 2.57, 3.0, 2.57, 'Vcond\nVpH\nVtemp', lpos=0.5, loffy=0.05, lw=1.2)
 
-# SAR FSM
-box(ax, 5.5, 6.1, 2.0, 1.4, 'SAR Control\nFSM',
-    'Moore, 8 States', fc='#e8e8e8', fontsize=9)
-# Result Register
-box(ax, 5.5, 4.95, 2.0, 0.85, 'Result\nRegister', fc='white', fontsize=8)
-# SPI Slave
-box(ax, 7.7, 5.6, 1.9, 1.3, 'SPI Slave\n16-bit frame', fc='#e8e8e8', fontsize=8)
-# Channel Sequencer
-box(ax, 7.7, 4.5, 1.9, 0.85, 'Channel\nSequencer', fc='white', fontsize=8)
+# ─── MUX output → comparator ─────────────────────────────────────────────────
+arr(ax, 4.15, 6.80, 4.15, 6.35, 'VIN', loffx=0.25)
 
-# FSM → DAC code
-arrow(ax, 5.5, 6.45, 4.4, 4.62, 'dac_code[3:0]')
-# FSM → sample_en
-arrow(ax, 5.5, 7.1, 4.4, 5.5, 'sample_en', lw=1)
-# FSM → Result Reg
-arrow(ax, 6.5, 6.1, 6.5, 5.8, 'result[3:0]')
-# Result Reg → SPI
-arrow(ax, 7.5, 5.37, 7.7, 5.9, 'data_in[15:0]')
-# Sequencer → FSM (start)
-arrow(ax, 8.65, 5.35, 7.5, 6.45, 'start/ch_sel')
-# ch_sel → MUX
-arrow(ax, 7.7, 4.92, 4.4, 6.65, '')
+# ─── DAC → comparator ────────────────────────────────────────────────────────
+arr(ax, 4.15, 4.40, 4.15, 4.95, 'VDAC', loffx=0.28)
 
-# EOC
-arrow(ax, 7.5, 6.8, 7.7, 6.6, 'eoc')
-ax.annotate('', xy=(6.5, 6.95), xytext=(7.5, 6.95),
-            arrowprops=dict(arrowstyle='->', color='black', lw=1.0))
+# ─── comparator → FSM ────────────────────────────────────────────────────────
+arr(ax, 5.30, 5.97, 6.00, 7.17, 'comp_out', lpos=0.5, loffx=0.15, loffy=0.10)
 
-# ===== SPI INTERFACE (right) =====
-ax.text(11.5, 7.9, 'SPI INTERFACE', ha='center', va='center',
-        fontsize=8, fontweight='bold', color='#555555')
-rect_spi = plt.Rectangle((10.0, 5.2), 2.8, 2.6,
-                          fill=False, linestyle='--', edgecolor='gray', lw=1.2)
-ax.add_patch(rect_spi)
+# ─── FSM → DAC code ──────────────────────────────────────────────────────────
+ax.annotate('', xy=(5.30, 4.75), xytext=(6.00, 7.05),
+            arrowprops=dict(arrowstyle='->', color='black', lw=1.2,
+                            connectionstyle='arc3,rad=0.3'))
+ax.text(5.05, 5.9, 'dac_code\n[3:0]', ha='right', va='center', fontsize=7,
+        style='italic', color='#222',
+        bbox=dict(boxstyle='round,pad=0.1', fc='white', alpha=0.9, ec='none'), zorder=5)
 
-box(ax, 10.1, 6.8, 2.5, 0.7, 'MCU / Host', 'SPI Master', fc='#f0f0f0', fontsize=8)
-box(ax, 10.1, 5.4, 2.5, 1.1, 'SPI Bus\nSCLK/MOSI\nMISO/CS_n', fc='white', fontsize=7)
+# ─── FSM → sample_en ─────────────────────────────────────────────────────────
+ax.annotate('', xy=(5.30, 5.62), xytext=(6.00, 6.85),
+            arrowprops=dict(arrowstyle='->', color='black', lw=1.0,
+                            connectionstyle='arc3,rad=0.25'))
+ax.text(5.2, 6.25, 'sample\n_en', ha='right', va='center', fontsize=7,
+        style='italic', color='#222',
+        bbox=dict(boxstyle='round,pad=0.1', fc='white', alpha=0.9, ec='none'), zorder=5)
 
-arrow(ax, 9.6, 6.2, 10.1, 6.2, '')
-arrow(ax, 10.1, 7.15, 9.6, 7.15, '')
-ax.annotate('', xy=(9.6, 6.2), xytext=(9.6, 7.15),
-            arrowprops=dict(arrowstyle='<->', color='black', lw=1.2))
+# ─── FSM → mux sel ───────────────────────────────────────────────────────────
+ax.annotate('', xy=(3.00, 7.17), xytext=(6.00, 7.17),
+            arrowprops=dict(arrowstyle='->', color='black', lw=1.1,
+                            connectionstyle='arc3,rad=0.0'))
+ax.text(4.50, 7.35, 'mux_sel[2:0]', ha='center', va='bottom', fontsize=7,
+        style='italic', color='#222',
+        bbox=dict(boxstyle='round,pad=0.1', fc='white', alpha=0.9, ec='none'), zorder=5)
 
-# ===== STATUS / LED =====
-box(ax, 5.5, 4.35, 1.0, 0.45, 'LED', fc='white', fontsize=7)
-box(ax, 6.7, 4.35, 1.0, 0.45, 'Status', fc='white', fontsize=7)
+# ─── sequencer → FSM start ────────────────────────────────────────────────────
+arr(ax, 8.40, 7.17, 8.40, 7.17, '')
+arr(ax, 8.40, 4.77, 8.40, 6.80, 'start\nch_sel', lpos=0.5, loffx=0.35)
 
-# ===== POWER DOMAIN LABELS =====
-ax.text(0.15, 4.0, 'VDD=1.8V', ha='left', va='center', fontsize=7, color='gray')
-ax.text(2.85, 4.0, 'AVDD=1.8V', ha='left', va='center', fontsize=7, color='gray')
-ax.text(5.35, 4.0, 'DVDD=1.8V', ha='left', va='center', fontsize=7, color='gray')
+# ─── FSM → result reg ────────────────────────────────────────────────────────
+arr(ax, 7.20, 6.80, 7.20, 6.35, 'result[3:0]', loffx=0.55)
 
-# ===== LEGEND =====
-legend_patches = [
-    mpatches.Patch(facecolor='#f0f0f0', edgecolor='black', label='Sensor/IO Blocks'),
-    mpatches.Patch(facecolor='white', edgecolor='black', label='Analog Blocks'),
-    mpatches.Patch(facecolor='#e8e8e8', edgecolor='black', label='Digital Blocks'),
+# ─── result reg → SPI slave ───────────────────────────────────────────────────
+arr(ax, 7.20, 5.60, 7.20, 2.95, 'data_in\n[15:0]', lpos=0.5, loffx=0.55)
+
+# ─── SPI slave → SPI bus ─────────────────────────────────────────────────────
+arr(ax, 8.40, 2.57, 11.10, 5.57, 'SPI 16-bit', lpos=0.5, loffx=0.20, loffy=0.15)
+
+# ─── SPI bus ↔ MCU ───────────────────────────────────────────────────────────
+ax.annotate('', xy=(12.30, 5.95), xytext=(12.30, 6.80),
+            arrowprops=dict(arrowstyle='<->', color='black', lw=1.3))
+
+# ─── EOC ─────────────────────────────────────────────────────────────────────
+arr(ax, 8.40, 6.80, 11.10, 3.57, 'eoc', lpos=0.5, loffx=0.20, loffy=0.10)
+
+# ─── power labels ────────────────────────────────────────────────────────────
+for xp, lbl in [(0.25, 'VDD=1.8V'), (2.85, 'AVDD=1.8V'), (5.85, 'DVDD=1.8V')]:
+    ax.text(xp, 1.70, lbl, fontsize=7, color='#888', ha='left')
+
+# ─── legend ──────────────────────────────────────────────────────────────────
+patches = [
+    mpatches.Patch(fc='#f5f5f5', ec='black', label='Sensor / Front-End'),
+    mpatches.Patch(fc='white',   ec='black', label='Blocos Analógicos'),
+    mpatches.Patch(fc='#e0e0e0', ec='black', label='Blocos Digitais'),
+    mpatches.Patch(fc='#eee',    ec='black', label='Referência / Relógio'),
 ]
-ax.legend(handles=legend_patches, loc='lower right', fontsize=7, framealpha=0.9)
+ax.legend(handles=patches, loc='lower right', fontsize=7.5, framealpha=0.95)
 
-# ===== BOTTOM NOTE =====
-ax.text(7, 0.15, 'AquaMonitorSoC v1.0 — PADIS Unidade 7, Cap 5 — CMOS TSMC 180nm',
-        ha='center', va='center', fontsize=7, color='gray', style='italic')
+ax.text(8, 0.15, 'AquaMonitorSoC v1.0 — PADIS Unidade 7, Capítulo 5 — CMOS TSMC 180nm',
+        ha='center', fontsize=7.5, color='gray', style='italic')
 
 plt.tight_layout()
-plt.savefig('fig_arquitetura_soc.png', dpi=150, bbox_inches='tight',
-            facecolor='white')
+plt.savefig('fig_arquitetura_soc.png', dpi=150, bbox_inches='tight', facecolor='white')
 print("Saved: fig_arquitetura_soc.png")

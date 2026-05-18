@@ -1,7 +1,7 @@
 """
-gerar_layout_soc.py
-Simulated layout view for AquaMonitorSoC v1.0
-800x600µm die, grayscale layers, 12x9
+gerar_layout_soc.py — AquaMonitorSoC v1.0
+Simulated layout view. Block positions match floorplan exactly.
+All labels inside block centres only, no overflow.
 """
 import matplotlib
 matplotlib.use('Agg')
@@ -9,168 +9,140 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
-fig, ax = plt.subplots(figsize=(12, 9))
-
-DIE_W = 800
-DIE_H = 600
-PAD   = 40
-
-ax.set_xlim(-10, DIE_W + 80)
-ax.set_ylim(-30, DIE_H + 60)
-ax.set_aspect('equal')
-ax.axis('off')
-ax.set_title('AquaMonitorSoC v1.0 — Simulated Layout View\n'
-             '800×600 µm Die — CMOS TSMC 180nm — METAL1/METAL2 Routing',
-             fontsize=11, fontweight='bold')
-
-# ---- Layer colors (grayscale fills) ----
-LAYERS = {
-    'diff':   '#f0f0f0',  # very light gray — diffusion
-    'poly':   '#d8d8d8',  # light gray — polysilicon
-    'metal1': '#aaaaaa',  # medium gray — Metal1
-    'metal2': '#666666',  # dark gray — Metal2
-    'via':    '#333333',  # very dark — Vias
-    'nwell':  '#eeeeee',  # very light — N-well
-    'pad':    '#bbbbbb',  # pad metal
-}
-
+fig, ax = plt.subplots(figsize=(13, 10))
+DIE_W, DIE_H = 800, 600
+PAD = 45
 rng = np.random.default_rng(42)
 
-def rect(ax, x, y, w, h, color, ec='none', lw=0.5, alpha=1.0, zorder=2):
-    r = plt.Rectangle((x, y), w, h, facecolor=color, edgecolor=ec,
-                       linewidth=lw, alpha=alpha, zorder=zorder)
-    ax.add_patch(r)
+ax.set_xlim(-10, DIE_W + 100)
+ax.set_ylim(-35, DIE_H + 65)
+ax.set_aspect('equal')
+ax.axis('off')
+fig.patch.set_facecolor('white')
+ax.set_title('AquaMonitorSoC v1.0 — Vista de Layout Simulado\n'
+             'Die 800×600 µm · CMOS TSMC 180nm · Metal 1 & Metal 2',
+             fontsize=11, fontweight='bold', pad=8)
 
-# ---- Background / N-well regions ----
-rect(ax, PAD, PAD, DIE_W - 2*PAD, DIE_H - 2*PAD, LAYERS['nwell'], zorder=1)
+# ─── Layer palette (grayscale) ────────────────────────────────────────────────
+L = {'nwell': '#efefef', 'diff': '#e0e0e0', 'poly': '#c8c8c8',
+     'metal1': '#a0a0a0', 'metal2': '#606060', 'pad': '#b0b0b0'}
 
-# ---- I/O ring ----
-rect(ax, 0, 0, DIE_W, PAD, LAYERS['pad'], 'black', 0.8, zorder=3)
-rect(ax, 0, DIE_H-PAD, DIE_W, PAD, LAYERS['pad'], 'black', 0.8, zorder=3)
-rect(ax, 0, 0, PAD, DIE_H, LAYERS['pad'], 'black', 0.8, zorder=3)
-rect(ax, DIE_W-PAD, 0, PAD, DIE_H, LAYERS['pad'], 'black', 0.8, zorder=3)
+def r(ax, x, y, w, h, fc, ec='none', lw=0.5, z=2):
+    ax.add_patch(plt.Rectangle((x,y), w, h, fc=fc, ec=ec, lw=lw, zorder=z))
 
-# ---- Pad cells (individual) ----
-pad_w = 30
+# ─── I/O ring ─────────────────────────────────────────────────────────────────
+r(ax, 0, 0, DIE_W, DIE_H, L['pad'], 'black', 2.5, 1)
+r(ax, PAD, PAD, DIE_W-2*PAD, DIE_H-2*PAD, L['nwell'], 'black', 1.2, 2)
+
+# Pad cells
 for i in range(10):
-    px = 5 + i * (DIE_W - 10) / 10
-    rect(ax, px, 5, pad_w, PAD - 10, LAYERS['metal2'], 'black', 0.5, zorder=4)
-    rect(ax, px, DIE_H - PAD + 5, pad_w, PAD - 10, LAYERS['metal2'], 'black', 0.5, zorder=4)
-for i in range(6):
-    py = 5 + i * (DIE_H - 10) / 6
-    rect(ax, 5, py, PAD - 10, 30, LAYERS['metal2'], 'black', 0.5, zorder=4)
-    rect(ax, DIE_W - PAD + 5, py, PAD - 10, 30, LAYERS['metal2'], 'black', 0.5, zorder=4)
+    px = 5 + i*(DIE_W-10)/10
+    r(ax, px, 3,         26, PAD-8, L['metal2'], 'black', 0.5, 3)
+    r(ax, px, DIE_H-PAD+5, 26, PAD-8, L['metal2'], 'black', 0.5, 3)
+for i in range(5):
+    py = 5 + i*(DIE_H-10)/5
+    r(ax, 3,          py, PAD-8, 26, L['metal2'], 'black', 0.5, 3)
+    r(ax, DIE_W-PAD+5, py, PAD-8, 26, L['metal2'], 'black', 0.5, 3)
 
-# ---- Analog blocks ----
-AX = PAD + 15
-split_x = PAD + int(0.40 * (DIE_W - 2*PAD))
+SPLIT = PAD + int(0.40*(DIE_W-2*PAD))  # 333
 
-def draw_block_layout(ax, x, y, w, h, name, diffusions=3):
-    """Draw a block with diffusion/poly/metal layers."""
-    # Block background
-    rect(ax, x, y, w, h, LAYERS['diff'], 'black', 1.0, zorder=5)
-    # Poly rows (gate fingers)
-    poly_pitch = h / (diffusions + 1)
-    for i in range(diffusions):
-        py = y + (i + 0.7) * poly_pitch
-        rect(ax, x + 3, py, w - 6, 3, LAYERS['poly'], 'none', 0, zorder=6)
-    # Metal1 horizontal routes
-    for i in range(2):
-        my = y + h * (0.3 + i * 0.4)
-        rect(ax, x, my, w, 2, LAYERS['metal1'], 'none', 0, zorder=7)
-    # Metal2 vertical routes
-    for i in range(3):
-        mx = x + w * (0.25 + i * 0.25)
-        rect(ax, mx, y, 2, h, LAYERS['metal2'], 'none', 0, zorder=7)
-    # Label
-    ax.text(x + w/2, y + h/2, name, ha='center', va='center',
-            fontsize=7, fontweight='bold', zorder=9,
-            bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.75, ec='none'))
-    ax.text(x + w/2, y + 4, f'{w:.0f}×{h:.0f}µm', ha='center', va='bottom',
-            fontsize=5.5, color='#444444', zorder=9)
-    rect(ax, x, y, w, h, 'none', 'black', 1.2, zorder=8)
+# ─── Block drawing (diff + poly rows + metal1/2 routing stubs) ───────────────
+def draw_blk(x, y, w, h, name, n_poly=3, z=5):
+    r(ax, x, y, w, h, L['diff'], 'black', 1.2, z)
+    # poly "gate fingers"
+    if h > 20:
+        pitch = h/(n_poly+1)
+        for i in range(n_poly):
+            r(ax, x+4, y+(i+0.6)*pitch, w-8, 3, L['poly'], z=z+1)
+    # metal1 horizontals
+    for frac in (0.30, 0.70):
+        r(ax, x, y+h*frac, w, 2, L['metal1'], z=z+2)
+    # metal2 verticals
+    for frac in (0.25, 0.50, 0.75):
+        r(ax, x+w*frac, y, 2, h, L['metal2'], z=z+2)
+    # label centred, white background
+    ax.text(x+w/2, y+h/2, name, ha='center', va='center',
+            fontsize=7, fontweight='bold', zorder=z+3,
+            bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.80, ec='none'))
+    ax.add_patch(plt.Rectangle((x, y), w, h, fc='none', ec='black', lw=1.2, zorder=z+3))
 
-# Analog blocks
-draw_block_layout(ax, AX,        PAD + 340, 80, 60, 'Comparator')
-draw_block_layout(ax, AX + 100,  PAD + 340, 60, 60, 'Cap DAC')
-draw_block_layout(ax, AX,        PAD + 250, 40, 60, '3:1 MUX')
-draw_block_layout(ax, AX + 60,   PAD + 260, 50, 40, 'Bandgap')
-draw_block_layout(ax, AX,        PAD + 170, 70, 50, 'S/H Cap')
-draw_block_layout(ax, AX,        PAD + 50,  170, 80, 'Ana. Decap')
+AX  = PAD + 15
+DX  = SPLIT + 20
 
-# Digital blocks
-DX = split_x + 20
-draw_block_layout(ax, DX,        PAD + 400, 120, 80, 'SAR FSM', 5)
-draw_block_layout(ax, DX + 150,  PAD + 400, 100, 80, 'SPI Slave', 5)
-draw_block_layout(ax, DX,        PAD + 330, 60,  40, 'Clk Div')
-draw_block_layout(ax, DX + 80,   PAD + 330, 80,  40, 'Result Reg')
-draw_block_layout(ax, DX + 180,  PAD + 330, 80,  40, 'Ch Seq')
-draw_block_layout(ax, DX,        PAD + 270, 200, 40, 'Scan Chain')
-draw_block_layout(ax, DX,        PAD + 50,  260, 200, 'Digital Decap', 2)
+# ── analog ────────────────────────────────────────────────────────────────────
+draw_blk(AX,      390, 80, 65, 'Comparador')
+draw_blk(AX+100,  390, 60, 65, 'Cap DAC')
+draw_blk(AX,      310, 55, 55, '3:1 MUX')
+draw_blk(AX+75,   310, 60, 55, 'Bandgap')
+draw_blk(AX,      235, 80, 55, 'S/H Cap')
+draw_blk(AX,      175, 80, 45, 'Bias Gen')
+draw_blk(AX,       65,170, 90, 'Ana. Decap', n_poly=2)
 
-# ---- Routing channels ----
-# Horizontal route: Comparator out to SAR FSM
-y_route = PAD + 375
-ax.plot([AX + 80, DX + 60], [y_route, y_route],
-        color=LAYERS['metal2'], lw=2, zorder=10)
-ax.text((AX + 80 + DX + 60)/2, y_route + 3, 'comp_out',
-        ha='center', fontsize=5.5, color='#333333', zorder=11)
+# ── digital ───────────────────────────────────────────────────────────────────
+draw_blk(DX,      400,130, 80, 'SAR FSM',   n_poly=5)
+draw_blk(DX+160,  400,110, 80, 'SPI Slave', n_poly=5)
+draw_blk(DX,      335, 70, 45, 'Clk Div')
+draw_blk(DX+90,   335, 90, 45, 'Result Reg')
+draw_blk(DX+200,  335, 80, 45, 'Ch Seq')
+draw_blk(DX,      270,210, 45, 'Scan Chain', n_poly=2)
+draw_blk(DX,       65,270,180, 'Dig. Decap', n_poly=2)
 
-# DAC code route: SAR FSM to DAC
-y_dac = PAD + 365
-ax.plot([DX + 60, split_x + 5, AX + 130], [y_dac, y_dac, y_dac],
-        color=LAYERS['metal1'], lw=1.5, zorder=10)
-ax.text(split_x - 20, y_dac + 3, 'dac_code[3:0]',
-        ha='center', fontsize=5.5, color='#333333', zorder=11)
+# ─── Routing traces ──────────────────────────────────────────────────────────
+# comp_out: Comparator right edge → SAR FSM left edge (horizontal)
+y_co = PAD + 422
+ax.plot([AX+80, DX], [y_co, y_co], color=L['metal2'], lw=2, zorder=8)
+ax.text((AX+80+DX)//2, y_co+4, 'comp_out', ha='center',
+        fontsize=5.5, color='#222', zorder=9)
 
-# SPI routes
-y_spi = PAD + 440
-ax.plot([DX + 250, DIE_W - PAD], [y_spi, y_spi],
-        color=LAYERS['metal2'], lw=2, zorder=10)
-ax.text(DX + 290, y_spi + 3, 'SPI bus', ha='center',
-        fontsize=5.5, color='#333333', zorder=11)
+# dac_code: SAR FSM bottom → Cap DAC (vertical + horizontal)
+x_dac = DX + 65
+ax.plot([x_dac, x_dac], [PAD+400, PAD+395], color=L['metal1'], lw=1.5, zorder=8)
+ax.plot([x_dac, AX+130], [PAD+395, PAD+395], color=L['metal1'], lw=1.5, zorder=8)
+ax.text((x_dac+AX+130)//2, PAD+399, 'dac_code[3:0]', ha='center',
+        fontsize=5.5, color='#222', zorder=9)
 
-# Clock distribution
-y_clk = DIE_H - PAD - 20
-ax.plot([DX, DX + 260], [y_clk, y_clk],
-        color=LAYERS['metal1'], lw=1.5, linestyle='--', zorder=10)
-ax.text(DX + 130, y_clk + 3, 'clk_1mhz', ha='center',
-        fontsize=5.5, color='#444444', zorder=11)
+# SPI bus to right edge
+y_spi = PAD+440
+ax.plot([DX+270, DIE_W-PAD], [y_spi, y_spi], color=L['metal2'], lw=2, zorder=8)
+ax.text(DX+310, y_spi+4, 'SPI bus', ha='center',
+        fontsize=5.5, color='#222', zorder=9)
 
-# ---- Analog/Digital split line ----
-ax.plot([split_x, split_x], [PAD, DIE_H - PAD],
-        'k--', lw=2.0, zorder=12)
-ax.text(split_x + 2, DIE_H - PAD - 8,
-        'Analog ↔ Digital\nboundary', ha='left', va='top',
-        fontsize=6.5, color='black', zorder=13)
+# Clock distribution (dashed metal1)
+y_clk = DIE_H-PAD-20
+ax.plot([DX, DX+280], [y_clk, y_clk], color=L['metal1'], lw=1.5,
+        ls='--', zorder=8)
+ax.text(DX+140, y_clk+4, 'clk_1mhz (distribuição H-tree)', ha='center',
+        fontsize=5.5, color='#444', zorder=9)
 
-# ---- Domain labels ----
-ax.text(AX + 90, DIE_H - PAD - 10,
-        'ANALOG', ha='center', fontsize=9, fontweight='bold', color='#444444', zorder=13)
-ax.text(DX + 150, DIE_H - PAD - 10,
-        'DIGITAL', ha='center', fontsize=9, fontweight='bold', color='#111111', zorder=13)
+# ─── Boundary & labels ───────────────────────────────────────────────────────
+ax.plot([SPLIT, SPLIT], [PAD, DIE_H-PAD], 'k--', lw=2.0, zorder=10)
+ax.text(SPLIT+4, DIE_H-PAD-8, 'Analógico ↔ Digital',
+        ha='left', va='top', fontsize=6.5, color='#111', zorder=11)
 
-# ---- Scale bar ----
-sb_x = DIE_W - PAD - 120
-sb_y = 8
-ax.plot([sb_x, sb_x + 100], [sb_y, sb_y], 'k-', lw=2.5, zorder=15)
-ax.plot([sb_x, sb_x], [sb_y - 4, sb_y + 4], 'k-', lw=2.5, zorder=15)
-ax.plot([sb_x + 100, sb_x + 100], [sb_y - 4, sb_y + 4], 'k-', lw=2.5, zorder=15)
-ax.text(sb_x + 50, sb_y - 8, '100 µm', ha='center', va='top', fontsize=8)
+ax.text(AX+90, DIE_H-PAD-10, 'ANALÓGICO',
+        ha='center', fontsize=9, fontweight='bold', color='#555', zorder=11)
+ax.text(DX+155, DIE_H-PAD-10, 'DIGITAL',
+        ha='center', fontsize=9, fontweight='bold', color='#111', zorder=11)
 
-# ---- Legend ----
-legend_patches = [
-    mpatches.Patch(facecolor=LAYERS['nwell'],  edgecolor='black', label='Diffusion (N-well)'),
-    mpatches.Patch(facecolor=LAYERS['poly'],   edgecolor='black', label='Poly (Gate)'),
-    mpatches.Patch(facecolor=LAYERS['metal1'], edgecolor='black', label='Metal 1'),
-    mpatches.Patch(facecolor=LAYERS['metal2'], edgecolor='black', label='Metal 2'),
-    mpatches.Patch(facecolor=LAYERS['pad'],    edgecolor='black', label='Pad Metal (I/O Ring)'),
+# ─── Scale bar ───────────────────────────────────────────────────────────────
+sb_x = DIE_W - 130
+ax.plot([sb_x, sb_x+100], [-20, -20], 'k-', lw=2.5)
+for ex in (sb_x, sb_x+100):
+    ax.plot([ex, ex], [-24, -16], 'k-', lw=2.5)
+ax.text(sb_x+50, -27, '100 µm', ha='center', va='top', fontsize=8)
+
+# ─── Legend ──────────────────────────────────────────────────────────────────
+patches = [
+    mpatches.Patch(fc=L['nwell'],  ec='black', label='N-Well / Difusão'),
+    mpatches.Patch(fc=L['poly'],   ec='black', label='Polisilício (Gate)'),
+    mpatches.Patch(fc=L['metal1'], ec='black', label='Metal 1'),
+    mpatches.Patch(fc=L['metal2'], ec='black', label='Metal 2'),
+    mpatches.Patch(fc=L['pad'],    ec='black', label='Pad Metal (I/O Ring)'),
 ]
-ax.legend(handles=legend_patches, loc='lower right',
-          fontsize=7.5, framealpha=0.95)
+ax.legend(handles=patches, loc='lower right', fontsize=7.5, framealpha=0.95)
 
-ax.text(DIE_W/2, -25,
-        'AquaMonitorSoC v1.0 — Simulated Layout — PADIS Unidade 7, Cap 5',
+ax.text(DIE_W/2, -33,
+        'AquaMonitorSoC v1.0 — Layout Simulado — PADIS Unidade 7, Cap 5',
         ha='center', va='top', fontsize=7, color='gray', style='italic')
 
 plt.tight_layout()

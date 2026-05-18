@@ -1,0 +1,20 @@
+\babel@toc {brazil}{}\relax 
+\contentsline {table}{\numberline {1}{\ignorespaces Especificação dos canais sensoriais do AquaMonitorSoC v1.0}}{10}{table.caption.8}%
+\contentsline {table}{\numberline {2}{\ignorespaces Especificação do conversor SAR ADC 4-bit}}{10}{table.caption.9}%
+\contentsline {table}{\numberline {3}{\ignorespaces Protocolo SPI do AquaMonitorSoC v1.0}}{11}{table.caption.10}%
+\contentsline {table}{\numberline {4}{\ignorespaces Resumo de área estimada por bloco funcional}}{15}{table.caption.13}%
+\contentsline {table}{\numberline {5}{\ignorespaces Atribuição de pinos do AquaMonitorSoC v1.0}}{18}{table.caption.15}%
+\contentsline {table}{\numberline {6}{\ignorespaces Especificações do comparador dinâmico}}{19}{table.caption.17}%
+\contentsline {table}{\numberline {7}{\ignorespaces Dimensionamento dos capacitores do DAC}}{20}{table.caption.18}%
+\contentsline {table}{\numberline {8}{\ignorespaces Tabela de estados da FSM SAR}}{22}{table.caption.20}%
+\contentsline {table}{\numberline {9}{\ignorespaces Análise de timing do caminho crítico}}{23}{table.caption.22}%
+\contentsline {table}{\numberline {10}{\ignorespaces Formato do quadro SPI de 16 bits}}{25}{table.caption.23}%
+\contentsline {table}{\numberline {11}{\ignorespaces Portas do módulo aquamonitor\_soc\_top}}{28}{table.caption.25}%
+\contentsline {table}{\numberline {12}{\ignorespaces Vetores de teste V00--V14 (canais pH e Condutividade)}}{31}{table.caption.27}%
+\contentsline {table}{\numberline {13}{\ignorespaces Vetores de teste V15--V29 (canais Condutividade e Temperatura)}}{32}{table.caption.28}%
+\contentsline {table}{\numberline {14}{\ignorespaces Distribuição de área por domínio}}{35}{table.caption.31}%
+\contentsline {table}{\numberline {15}{\ignorespaces Cálculo do atraso de Elmore para o caminho crítico}}{36}{table.caption.32}%
+\contentsline {table}{\numberline {16}{\ignorespaces Comparação pré-layout vs pós-layout}}{37}{table.caption.33}%
+\contentsline {table}{\numberline {17}{\ignorespaces Análise de cantos PVT -- offset do comparador e tempo de conversão}}{38}{table.caption.34}%
+\contentsline {table}{\numberline {18}{\ignorespaces Distribuição de consumo de potência por bloco -- canto TT, \SI {27}{\celsius }}}{39}{table.caption.35}%
+\contentsline {table}{\numberline {19}{\ignorespaces Comparação quantitativa das três arquiteturas}}{41}{table.caption.36}%

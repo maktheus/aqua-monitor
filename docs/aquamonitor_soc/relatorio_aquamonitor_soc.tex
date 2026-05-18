@@ -948,12 +948,12 @@ um quadro de 16 bits por transação. O formato do quadro é:
     \toprule
     \textbf{Bits} & \textbf{Campo} & \textbf{Largura} & \textbf{Conteúdo} \\
     \midrule
-    [15:12] & CH\_ID    & 4 bits & Identificador do canal (0=pH, 1=Cond, 2=Temp) \\
-    [11:8]  & RESULT    & 4 bits & Código ADC de 4 bits (0--15) \\
-    [7]     & EOC       & 1 bit  & Flag de fim de conversão \\
-    [6]     & OVERRUN   & 1 bit  & Flag de sobreposição de leitura \\
-    [5:2]   & RSVD      & 4 bits & Reservado \\
-    [1:0]   & CH\_ECHO  & 2 bits & Echo do canal selecionado \\
+    {[15:12]} & CH\_ID    & 4 bits & Identificador do canal (0=pH, 1=Cond, 2=Temp) \\
+    {[11:8]}  & RESULT    & 4 bits & Código ADC de 4 bits (0--15) \\
+    {[7]}     & EOC       & 1 bit  & Flag de fim de conversão \\
+    {[6]}     & OVERRUN   & 1 bit  & Flag de sobreposição de leitura \\
+    {[5:2]}   & RSVD      & 4 bits & Reservado \\
+    {[1:0]}   & CH\_ECHO  & 2 bits & Echo do canal selecionado \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1119,68 +1119,78 @@ A estratégia inclui:
 
 \subsection{Tabela de Vetores de Teste}
 
-\begin{longtable}{ccccccc}
-  \caption{Tabela de 30 vetores de teste  --  AquaMonitorSoC v1.0}
-  \label{tab:testvectors} \\
-  \toprule
-  \textbf{Vec} & \textbf{Canal} & \textbf{Parâmetro} &
-  \textbf{VIN (mV)} & \textbf{Cód. Exp.} & \textbf{Cód. Obs.} & \textbf{Status} \\
-  \midrule
-  \endfirsthead
-  \multicolumn{7}{c}{\small\itshape (continuação)} \\
-  \toprule
-  \textbf{Vec} & \textbf{Canal} & \textbf{Parâmetro} &
-  \textbf{VIN (mV)} & \textbf{Cód. Exp.} & \textbf{Cód. Obs.} & \textbf{Status} \\
-  \midrule
-  \endhead
-  \bottomrule
-  \endfoot
-  \rowcolor{bwlight}
-  V00 & Ch0 & pH & 0    & 0  & 0  & PASS \\
-  V01 & Ch0 & pH & 113  & 1  & 1  & PASS \\
-  \rowcolor{bwlight}
-  V02 & Ch0 & pH & 225  & 2  & 2  & PASS \\
-  V03 & Ch0 & pH & 338  & 3  & 3  & PASS \\
-  \rowcolor{bwlight}
-  V04 & Ch0 & pH & 450  & 4  & 4  & PASS \\
-  V05 & Ch0 & pH & 563  & 5  & 5  & PASS \\
-  \rowcolor{bwlight}
-  V06 & Ch0 & pH & 675  & 6  & 6  & PASS \\
-  V07 & Ch0 & pH & 900  & 8  & 8  & PASS \\
-  \rowcolor{bwlight}
-  V08 & Ch0 & pH & 1125 & 10 & 10 & PASS \\
-  V09 & Ch0 & pH & 1575 & 14 & 14 & PASS \\
-  \rowcolor{bwlight}
-  V10 & Ch1 & Cond & 0   & 0 & 0  & PASS \\
-  V11 & Ch1 & Cond & 113 & 1 & 1  & PASS \\
-  \rowcolor{bwlight}
-  V12 & Ch1 & Cond & 225 & 2 & 2  & PASS \\
-  V13 & Ch1 & Cond & 450 & 4 & 4  & PASS \\
-  \rowcolor{bwlight}
-  V14 & Ch1 & Cond & 563 & 5 & 5  & PASS \\
-  V15 & Ch1 & Cond & 675 & 6 & 6  & PASS \\
-  \rowcolor{bwlight}
-  V16 & Ch1 & Cond & 900  & 8  & 8  & PASS \\
-  V17 & Ch1 & Cond & 1013 & 9  & 9  & PASS \\
-  \rowcolor{bwlight}
-  V18 & Ch1 & Cond & 1350 & 12 & 12 & PASS \\
-  V19 & Ch1 & Cond & 1575 & 14 & 14 & PASS \\
-  \rowcolor{bwlight}
-  V20 & Ch2 & Temp & 0    & 0  & 0  & PASS \\
-  V21 & Ch2 & Temp & 113  & 1  & 1  & PASS \\
-  \rowcolor{bwlight}
-  V22 & Ch2 & Temp & 338  & 3  & 3  & PASS \\
-  V23 & Ch2 & Temp & 450  & 4  & 4  & PASS \\
-  \rowcolor{bwlight}
-  V24 & Ch2 & Temp & 675  & 6  & 6  & PASS \\
-  V25 & Ch2 & Temp & 788  & 7  & 7  & PASS \\
-  \rowcolor{bwlight}
-  V26 & Ch2 & Temp & 900  & 8  & 8  & PASS \\
-  V27 & Ch2 & Temp & 1125 & 10 & 10 & PASS \\
-  \rowcolor{bwlight}
-  V28 & Ch2 & Temp & 1350 & 12 & 12 & PASS \\
-  V29 & Ch2 & Temp & 1688 & 15 & 15 & PASS \\
-\end{longtable}
+% Test vectors table -- split into two halves to avoid longtable memory issues
+\begin{table}[H]
+  \centering
+  \caption{Vetores de teste V00--V14 (canais pH e Condutividade)}
+  \label{tab:testvectors_a}
+  \small
+  \begin{tabular}{ccccccc}
+    \toprule
+    \textbf{Vec} & \textbf{Canal} & \textbf{Par.} &
+    \textbf{VIN (mV)} & \textbf{Exp.} & \textbf{Obs.} & \textbf{Status} \\
+    \midrule
+    V00 & Ch0 & pH   &    0 &  0 &  0 & PASS \\
+    \rowcolor{bwlight}
+    V01 & Ch0 & pH   &  113 &  1 &  1 & PASS \\
+    V02 & Ch0 & pH   &  225 &  2 &  2 & PASS \\
+    \rowcolor{bwlight}
+    V03 & Ch0 & pH   &  338 &  3 &  3 & PASS \\
+    V04 & Ch0 & pH   &  450 &  4 &  4 & PASS \\
+    \rowcolor{bwlight}
+    V05 & Ch0 & pH   &  563 &  5 &  5 & PASS \\
+    V06 & Ch0 & pH   &  675 &  6 &  6 & PASS \\
+    \rowcolor{bwlight}
+    V07 & Ch0 & pH   &  900 &  8 &  8 & PASS \\
+    V08 & Ch0 & pH   & 1125 & 10 & 10 & PASS \\
+    \rowcolor{bwlight}
+    V09 & Ch0 & pH   & 1575 & 14 & 14 & PASS \\
+    V10 & Ch1 & Cond &    0 &  0 &  0 & PASS \\
+    \rowcolor{bwlight}
+    V11 & Ch1 & Cond &  113 &  1 &  1 & PASS \\
+    V12 & Ch1 & Cond &  225 &  2 &  2 & PASS \\
+    \rowcolor{bwlight}
+    V13 & Ch1 & Cond &  450 &  4 &  4 & PASS \\
+    V14 & Ch1 & Cond &  563 &  5 &  5 & PASS \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Vetores de teste V15--V29 (canais Condutividade e Temperatura)}
+  \label{tab:testvectors_b}
+  \small
+  \begin{tabular}{ccccccc}
+    \toprule
+    \textbf{Vec} & \textbf{Canal} & \textbf{Par.} &
+    \textbf{VIN (mV)} & \textbf{Exp.} & \textbf{Obs.} & \textbf{Status} \\
+    \midrule
+    V15 & Ch1 & Cond &  675 &  6 &  6 & PASS \\
+    \rowcolor{bwlight}
+    V16 & Ch1 & Cond &  900 &  8 &  8 & PASS \\
+    V17 & Ch1 & Cond & 1013 &  9 &  9 & PASS \\
+    \rowcolor{bwlight}
+    V18 & Ch1 & Cond & 1350 & 12 & 12 & PASS \\
+    V19 & Ch1 & Cond & 1575 & 14 & 14 & PASS \\
+    \rowcolor{bwlight}
+    V20 & Ch2 & Temp &    0 &  0 &  0 & PASS \\
+    V21 & Ch2 & Temp &  113 &  1 &  1 & PASS \\
+    \rowcolor{bwlight}
+    V22 & Ch2 & Temp &  338 &  3 &  3 & PASS \\
+    V23 & Ch2 & Temp &  450 &  4 &  4 & PASS \\
+    \rowcolor{bwlight}
+    V24 & Ch2 & Temp &  675 &  6 &  6 & PASS \\
+    V25 & Ch2 & Temp &  788 &  7 &  7 & PASS \\
+    \rowcolor{bwlight}
+    V26 & Ch2 & Temp &  900 &  8 &  8 & PASS \\
+    V27 & Ch2 & Temp & 1125 & 10 & 10 & PASS \\
+    \rowcolor{bwlight}
+    V28 & Ch2 & Temp & 1350 & 12 & 12 & PASS \\
+    V29 & Ch2 & Temp & 1688 & 15 & 15 & PASS \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \begin{infobox}{Resultado da Simulação}
 A simulação com Icarus Verilog 11.0 executou com sucesso, produzindo o arquivo

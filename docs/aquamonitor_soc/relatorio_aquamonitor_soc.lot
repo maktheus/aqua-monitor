@@ -13,8 +13,8 @@
 \contentsline {table}{\numberline {12}{\ignorespaces Vetores de teste V00--V14 (canais pH e Condutividade)}}{31}{table.caption.27}%
 \contentsline {table}{\numberline {13}{\ignorespaces Vetores de teste V15--V29 (canais Condutividade e Temperatura)}}{32}{table.caption.28}%
 \contentsline {table}{\numberline {14}{\ignorespaces Distribuição de área por domínio}}{35}{table.caption.31}%
-\contentsline {table}{\numberline {15}{\ignorespaces Cálculo do atraso de Elmore para o caminho crítico}}{37}{table.caption.32}%
-\contentsline {table}{\numberline {16}{\ignorespaces Comparação pré-layout vs pós-layout}}{38}{table.caption.33}%
-\contentsline {table}{\numberline {17}{\ignorespaces Análise de cantos PVT -- offset do comparador e tempo de conversão}}{39}{table.caption.34}%
-\contentsline {table}{\numberline {18}{\ignorespaces Distribuição de consumo de potência por bloco -- canto TT, \SI {27}{\celsius }}}{40}{table.caption.35}%
-\contentsline {table}{\numberline {19}{\ignorespaces Comparação quantitativa das três arquiteturas}}{42}{table.caption.36}%
+\contentsline {table}{\numberline {15}{\ignorespaces Cálculo do atraso de Elmore para o caminho crítico}}{36}{table.caption.32}%
+\contentsline {table}{\numberline {16}{\ignorespaces Comparação pré-layout vs pós-layout}}{37}{table.caption.33}%
+\contentsline {table}{\numberline {17}{\ignorespaces Análise de cantos PVT -- offset do comparador e tempo de conversão}}{38}{table.caption.34}%
+\contentsline {table}{\numberline {18}{\ignorespaces Distribuição de consumo de potência por bloco -- canto TT, \SI {27}{\celsius }}}{39}{table.caption.35}%
+\contentsline {table}{\numberline {19}{\ignorespaces Comparação quantitativa das três arquiteturas}}{41}{table.caption.36}%

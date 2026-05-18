@@ -10,4 +10,4 @@
 \contentsline {figure}{\numberline {9}{\ignorespaces Visão de sistema do AquaMonitorSoC v1.0 -- interconexão dos blocos conforme implementado no top-level.}}{27}{figure.caption.24}%
 \contentsline {figure}{\numberline {10}{\ignorespaces Resultados de simulação: rampa de tensão nos 3 canais (topo), saída DAC em escada, código digital e pulsos EOC (base).}}{31}{figure.caption.26}%
 \contentsline {figure}{\numberline {11}{\ignorespaces Timing SAR -- conversão 1 (pH, código 0110) e conversão 2 (condutividade, código 1001).}}{33}{figure.caption.29}%
-\contentsline {figure}{\numberline {12}{\ignorespaces Vista de layout simulada -- camadas de difusão, poli, Metal1 e Metal2. Canais de roteamento entre blocos e escala de \SI {100}{\micro \meter }.}}{35}{figure.caption.30}%
+\contentsline {figure}{\numberline {12}{\ignorespaces Vista de layout simulada -- camadas de difusão, poli, Metal1 e Metal2. Canais de roteamento entre blocos e escala de \SI {100}{\micro \meter }.}}{34}{figure.caption.30}%

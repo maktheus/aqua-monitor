@@ -96,19 +96,8 @@
 \newenvironment{abstractenv}{%
   \begin{center}\textbf{Abstract}\end{center}\small\setlength{\parindent}{0pt}}{}
 
-% ── Logo Softex (TikZ) ──────────────────────────────────────────────────────
-\newcommand{\logoSoftex}{%
-\begin{tikzpicture}[baseline=(base)]
-  \coordinate (base) at (0,0);
-  \node[draw=black,rounded corners=3pt,minimum width=3.4cm,minimum height=1.1cm,
-        thick,fill=white] (box) at (0,0) {};
-  % Circuit pin symbol (L-shape left side = IC pin)
-  \draw[very thick,line cap=round]
-    ($(box.west)+(0.25, 0.18)$) -- ++(0,-0.36) -- ++(0.22,0);
-  \fill[black] ($(box.west)+(0.47,-0.18)$) circle (0.06cm);
-  \node[font=\bfseries\large\sffamily] at ($(box.center)+(0.15, 0.12)$) {SOFTEX};
-  \node[font=\footnotesize\sffamily]   at ($(box.center)+(0.15,-0.24)$) {Brasil};
-\end{tikzpicture}}
+% ── Logo Softex (imagem) ────────────────────────────────────────────────────
+\newcommand{\logoSoftex}{\includegraphics[height=1.6cm]{softex_logo.jpg}}
 
 % ── Logo CI Inovador (TikZ) ──────────────────────────────────────────────────
 \newcommand{\logoCIInovador}{%

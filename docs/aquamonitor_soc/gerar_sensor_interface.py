@@ -1,203 +1,131 @@
 """
-gerar_sensor_interface.py
-Sensor conditioning circuits for pH, Conductivity, Temperature PTAT
-3 sub-diagrams, black/white, 14x8
+gerar_sensor_interface.py — AquaMonitorSoC v1.0
+3 sensor conditioning chain diagrams, no overlaps.
+Each panel is a clean left-to-right signal chain with generous spacing.
 """
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
-fig, axes = plt.subplots(1, 3, figsize=(14, 8))
-fig.suptitle('AquaMonitorSoC v1.0 — Sensor Conditioning Circuits\n'
-             'Signal conditioning for pH, Conductivity and Temperature channels',
-             fontsize=12, fontweight='bold')
+fig, axes = plt.subplots(3, 1, figsize=(14, 12))
+fig.patch.set_facecolor('white')
+fig.suptitle('AquaMonitorSoC v1.0 — Circuitos de Condicionamento de Sinal\n'
+             'Canais: pH · Condutividade · Temperatura PTAT',
+             fontsize=13, fontweight='bold', y=0.99)
 
-def box_circ(ax, x, y, w, h, text, fc='white', ec='black', fs=8):
-    r = plt.Rectangle((x - w/2, y - h/2), w, h,
-                       facecolor=fc, edgecolor=ec, linewidth=1.5)
-    ax.add_patch(r)
-    ax.text(x, y, text, ha='center', va='center', fontsize=fs)
+# ─── helper: draw a block ────────────────────────────────────────────────────
+def blk(ax, x, y, w, h, title, sub='', fc='white', fs=8):
+    ax.add_patch(plt.Rectangle((x-w/2, y-h/2), w, h,
+                                fc=fc, ec='black', lw=1.4, zorder=3))
+    cy = y + h*0.15 if sub else y
+    ax.text(x, cy, title, ha='center', va='center', fontsize=fs,
+            fontweight='bold', zorder=4)
+    if sub:
+        ax.text(x, y-h*0.22, sub, ha='center', va='center',
+                fontsize=fs-1.5, color='#555', zorder=4)
 
-def circle_circ(ax, x, y, r, text, fc='white', ec='black', fs=7):
-    c = plt.Circle((x, y), r, facecolor=fc, edgecolor=ec, linewidth=1.5)
-    ax.add_patch(c)
-    ax.text(x, y, text, ha='center', va='center', fontsize=fs)
+def circle(ax, x, y, r, title, sub='', fc='#f0f0f0', fs=8):
+    ax.add_patch(plt.Circle((x, y), r, fc=fc, ec='black', lw=1.4, zorder=3))
+    cy = y + r*0.2 if sub else y
+    ax.text(x, cy, title, ha='center', va='center', fontsize=fs,
+            fontweight='bold', zorder=4)
+    if sub:
+        ax.text(x, y-r*0.45, sub, ha='center', va='center',
+                fontsize=fs-1.5, color='#555', zorder=4)
 
-def wire(ax, x1, y1, x2, y2):
-    ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
-                arrowprops=dict(arrowstyle='->', color='black', lw=1.2))
+def wire(ax, x1, y, x2, lbl='', color='black'):
+    ax.annotate('', xy=(x2, y), xytext=(x1, y),
+                arrowprops=dict(arrowstyle='->', color=color, lw=1.2))
+    if lbl:
+        ax.text((x1+x2)/2, y+0.12, lbl, ha='center', va='bottom',
+                fontsize=7, style='italic', color='#333')
 
-def line(ax, x1, y1, x2, y2, **kwargs):
-    ax.plot([x1, x2], [y1, y2], 'k-', lw=1.2, **kwargs)
-
-# ================================================================
-# Panel 1: pH Sensor
-# ================================================================
+# ═══════════════════════════════════════════════════════════════════
+# Panel 0: pH Sensor
+# ═══════════════════════════════════════════════════════════════════
 ax = axes[0]
-ax.set_xlim(0, 10)
-ax.set_ylim(0, 10)
+ax.set_xlim(0, 14)
+ax.set_ylim(-1.0, 2.5)
 ax.axis('off')
-ax.set_title('pH Sensor\n(Potentiometric Glass Electrode)', fontsize=10, fontweight='bold')
+ax.set_title('Canal pH — Eletrodo de Vidro Potenciométrico',
+             fontsize=10, fontweight='bold', pad=4)
 
-# pH glass electrode
-circle_circ(ax, 1.5, 7.5, 0.7, 'pH\nElect.', fc='#f0f0f0', fs=7)
-ax.text(1.5, 8.5, 'Glass Electrode', ha='center', fontsize=7, style='italic')
-ax.text(1.5, 6.5, 'Vin: 0–420mV', ha='center', fontsize=6.5, color='gray')
+# Signal chain: Electrode → TIA → Gain+Offset → Anti-alias LPF → VIN_pH
+Y = 1.0
+circle(ax, 1.2,  Y, 0.55, 'Eletrodo\npH', '0–420mV', fc='#f0f0f0', fs=7)
+blk(ax,    3.5,  Y, 2.2, 0.80, 'Amp. Transimpedância', 'Rfb = 10 GΩ\nRin > 10 TΩ', fs=7)
+blk(ax,    6.5,  Y, 2.0, 0.80, 'Ganho + Offset', '×4.3  +  Vref', fs=7)
+blk(ax,    9.4,  Y, 1.8, 0.80, 'Filtro Anti-alias', 'LPF: R=160kΩ\nC=100nF, fc=10Hz', fs=7)
+blk(ax,   12.2, Y, 1.2, 0.80, 'Buffer\n(OA)', 'VIN_pH\n0–1.8V', fc='#e8e8e8', fs=7)
 
-# TIA (Transimpedance Amplifier)
-box_circ(ax, 4.0, 7.5, 1.8, 1.0, 'TIA\n(OA+Rfb=10GΩ)', fc='white', fs=7)
-ax.text(4.0, 6.7, 'High-Z input\nRin > 10TΩ', ha='center', fontsize=6, color='gray')
+wire(ax, 1.75, Y, 2.4,  'Vpot\n(0–420mV)')
+wire(ax, 4.60, Y, 5.5,  'Vtia')
+wire(ax, 7.50, Y, 8.5,  'Vgain')
+wire(ax, 10.3, Y, 11.6, 'Vfilt')
 
-# R divider
-box_circ(ax, 6.5, 7.5, 1.4, 0.8, 'R Divider\nR1=R2=100kΩ', fc='white', fs=7)
-ax.text(6.5, 6.8, '÷2 → 0–1.8V', ha='center', fontsize=6, color='gray')
+# Note box
+ax.text(7.0, -0.45,
+        'Equação de Nernst: V = 0.0592 × (7 – pH) V  |  '
+        'Sensibilidade: 59.2 mV/pH  |  Escala: 0–840 mV → 0–1.8V',
+        ha='center', va='center', fontsize=7.5,
+        bbox=dict(boxstyle='round,pad=0.3', fc='#f8f8f8', ec='#aaa', lw=0.8))
 
-# Buffer
-box_circ(ax, 8.8, 7.5, 1.0, 0.7, 'Buffer\n(OA)', fc='white', fs=7)
-ax.text(8.8, 6.9, 'VIN_pH', ha='center', fontsize=7, color='black', fontweight='bold')
-
-# Wires
-wire(ax, 2.2, 7.5, 3.1, 7.5)
-wire(ax, 4.9, 7.5, 5.8, 7.5)
-wire(ax, 7.2, 7.5, 8.3, 7.5)
-ax.text(2.6, 7.7, 'Vpot', ha='center', fontsize=6.5, style='italic')
-ax.text(5.4, 7.7, 'Vtia', ha='center', fontsize=6.5, style='italic')
-ax.text(7.7, 7.7, 'Vdiv', ha='center', fontsize=6.5, style='italic')
-
-# VDD/GND ref lines
-line(ax, 4.0, 7.0, 4.0, 6.2)
-ax.text(4.0, 6.0, 'GND', ha='center', fontsize=6.5)
-
-# Calibration note
-ax.text(5.0, 5.5,
-        'pH Conditioning:\n'
-        '• Nernst voltage: 59.16 mV/pH\n'
-        '• Range: 0–14 pH = 0–840 mV\n'
-        '• After ÷2: 0–420 mV\n'
-        '• After buffer: 0–1.8V (×4.3)',
-        ha='center', va='top', fontsize=7,
-        bbox=dict(boxstyle='round', fc='#f8f8f8', ec='gray', lw=0.8))
-
-ax.text(5.0, 2.8,
-        'Rc: C_bypass=100nF\n(anti-aliasing @ fc=1kHz)',
-        ha='center', va='top', fontsize=6.5, color='gray')
-
-# ================================================================
-# Panel 2: Conductivity Sensor
-# ================================================================
+# ═══════════════════════════════════════════════════════════════════
+# Panel 1: Conductivity Sensor
+# ═══════════════════════════════════════════════════════════════════
 ax = axes[1]
-ax.set_xlim(0, 10)
-ax.set_ylim(0, 10)
+ax.set_xlim(0, 14)
+ax.set_ylim(-1.0, 2.5)
 ax.axis('off')
-ax.set_title('Conductivity Sensor\n(AC Excitation Method)', fontsize=10, fontweight='bold')
+ax.set_title('Canal Condutividade — Excitação AC com Retificador de Precisão',
+             fontsize=10, fontweight='bold', pad=4)
 
-# AC excitation source
-circle_circ(ax, 1.2, 7.5, 0.65, 'AC\n1kHz', fc='#f0f0f0', fs=7)
-ax.text(1.2, 8.4, 'Excitation Osc.', ha='center', fontsize=7, style='italic')
+Y = 1.0
+circle(ax, 1.2,  Y, 0.55, 'Osc.\n1kHz', 'Vexc=1V', fc='#f0f0f0', fs=7)
+blk(ax,    3.4,  Y, 2.0, 0.80, 'Célula Cond.', 'K=1.0 cm⁻¹\nRcel: 500Ω–2MΩ', fs=7)
+blk(ax,    6.3,  Y, 2.0, 0.80, 'Retificador\nPrecisão', 'Full-wave\n4× OA', fs=7)
+blk(ax,    9.2,  Y, 1.8, 0.80, 'Filtro Passa-Baixa', 'R=4.7kΩ\nC=33nF, fc=1kHz', fs=7)
+blk(ax,   12.0, Y, 1.6, 0.80, 'Buffer\n(OA)', 'VIN_Cond\n0–1.8V', fc='#e8e8e8', fs=7)
 
-# Conductivity cell
-box_circ(ax, 3.2, 7.5, 1.4, 0.9, 'Cond Cell\nK=1.0 cm⁻¹', fc='#f0f0f0', fs=7)
-ax.text(3.2, 6.8, 'Rcel: 500Ω–2MΩ', ha='center', fontsize=6, color='gray')
+wire(ax, 1.75, Y, 2.4,  'Vexc')
+wire(ax, 4.40, Y, 5.3,  'Vac_cell')
+wire(ax, 7.30, Y, 8.3,  'Vdc_rect')
+wire(ax, 10.1, Y, 11.2, 'Vdc_filt')
 
-# Precision rectifier
-box_circ(ax, 5.5, 7.5, 1.5, 0.85, 'Full-wave\nRectifier', fc='white', fs=7)
-ax.text(5.5, 6.8, '4× OA circuit', ha='center', fontsize=6, color='gray')
+ax.text(7.0, -0.45,
+        'Vout = Vexc × Rref / Rcell  |  Rref = 4.7 kΩ  |  '
+        'Faixa: 0–2000 µS/cm → 0–1.8V  |  Eletrodo: aço inox SS316, d=2mm',
+        ha='center', va='center', fontsize=7.5,
+        bbox=dict(boxstyle='round,pad=0.3', fc='#f8f8f8', ec='#aaa', lw=0.8))
 
-# Low-pass filter
-box_circ(ax, 7.7, 7.5, 1.4, 0.85, 'LPF\nR=1kΩ C=160nF', fc='white', fs=7)
-ax.text(7.7, 6.8, 'fc=1kHz', ha='center', fontsize=6, color='gray')
-
-# Output
-ax.text(9.3, 7.5, 'VIN\nCond', ha='center', va='center',
-        fontsize=7, fontweight='bold')
-
-# Wires
-wire(ax, 1.85, 7.5, 2.5, 7.5)
-wire(ax, 3.9, 7.5, 4.75, 7.5)
-wire(ax, 6.25, 7.5, 7.0, 7.5)
-wire(ax, 8.4, 7.5, 9.0, 7.5)
-
-ax.text(2.1, 7.7, 'Vexc', ha='center', fontsize=6.5, style='italic')
-ax.text(4.3, 7.7, 'Vac', ha='center', fontsize=6.5, style='italic')
-ax.text(6.6, 7.7, 'Vdc', ha='center', fontsize=6.5, style='italic')
-
-# Conductivity calibration
-ax.text(5.0, 5.8,
-        'Conductivity Conditioning:\n'
-        '• Range: 0–2000 µS/cm\n'
-        '• AC excitation: VAC=1Vpeak, f=1kHz\n'
-        '• Vout = VAC × Rref / Rcell\n'
-        '• Rref = 4.7 kΩ\n'
-        '• Full-scale: 0→1.8V',
-        ha='center', va='top', fontsize=7,
-        bbox=dict(boxstyle='round', fc='#f8f8f8', ec='gray', lw=0.8))
-
-ax.text(5.0, 2.9,
-        'C_bypass=100nF anti-aliasing\n'
-        'Electrode: SS304 plates, d=1mm',
-        ha='center', va='top', fontsize=6.5, color='gray')
-
-# ================================================================
-# Panel 3: Temperature PTAT
-# ================================================================
+# ═══════════════════════════════════════════════════════════════════
+# Panel 2: Temperature PTAT
+# ═══════════════════════════════════════════════════════════════════
 ax = axes[2]
-ax.set_xlim(0, 10)
-ax.set_ylim(0, 10)
+ax.set_xlim(0, 14)
+ax.set_ylim(-1.0, 2.5)
 ax.axis('off')
-ax.set_title('Temperature Sensor\n(PTAT — Proportional to Abs. Temp.)',
-             fontsize=10, fontweight='bold')
+ax.set_title('Canal Temperatura — Sensor PTAT (Proporcional à Temperatura Absoluta)',
+             fontsize=10, fontweight='bold', pad=4)
 
-# PTAT core (diode pair)
-box_circ(ax, 1.5, 7.5, 1.4, 1.0, 'PTAT Cell\nQ1/Q2 ×8',
-         fc='#f0f0f0', fs=7)
-ax.text(1.5, 6.7, 'ΔVBE ≈ 1.6mV/°C', ha='center', fontsize=6, color='gray')
+Y = 1.0
+blk(ax,    1.5,  Y, 2.0, 0.80, 'Célula PTAT', 'Q1/Q2 (N=8)\nΔVBE≈1.6mV/°C', fc='#f0f0f0', fs=7)
+blk(ax,    4.3,  Y, 1.8, 0.80, 'Espelho\nCorrente', 'Iptat=10µA\n@ 27°C', fs=7)
+blk(ax,    7.0,  Y, 1.8, 0.80, 'Conv. I→V', 'R=10kΩ\nVptat=I×R', fs=7)
+blk(ax,    9.8,  Y, 2.0, 0.80, 'Ganho + Offset', '×6.8 + Vshift\n−40→125°C', fs=7)
+blk(ax,   12.3, Y, 1.4, 0.80, 'Buffer\n(OA)', 'VIN_Temp\n0–1.8V', fc='#e8e8e8', fs=7)
 
-# Current mirror
-box_circ(ax, 3.6, 7.5, 1.3, 0.85, 'Current\nMirror', fc='white', fs=7)
-ax.text(3.6, 6.8, 'Iptat=10µA@27°C', ha='center', fontsize=6, color='gray')
+wire(ax, 2.50, Y, 3.4,  'IPTAT')
+wire(ax, 5.20, Y, 6.1,  'Imirror')
+wire(ax, 7.90, Y, 8.8,  'Vptat')
+wire(ax, 10.8, Y, 11.6, 'Vgain')
 
-# V/I converter
-box_circ(ax, 5.7, 7.5, 1.4, 0.85, 'I→V Conv.\nR=10kΩ', fc='white', fs=7)
-ax.text(5.7, 6.8, 'V=IR', ha='center', fontsize=6, color='gray')
+ax.text(7.0, -0.45,
+        'Sensibilidade: 1.6 mV/°C  |  Faixa: −40..125°C → 0..265mV → (×6.8) → 0..1.8V  |  '
+        'Não-linearidade < 0.5°C (corrigida por SW)',
+        ha='center', va='center', fontsize=7.5,
+        bbox=dict(boxstyle='round,pad=0.3', fc='#f8f8f8', ec='#aaa', lw=0.8))
 
-# Output buffer + level shift
-box_circ(ax, 8.0, 7.5, 1.5, 0.85, 'Buffer+\nLevel Shift', fc='white', fs=7)
-ax.text(8.0, 6.8, '−40..125°C\n→0..1.8V', ha='center', fontsize=6, color='gray')
-
-ax.text(9.5, 7.5, 'VIN\nTemp', ha='center', va='center',
-        fontsize=7, fontweight='bold')
-
-# Wires
-wire(ax, 2.2, 7.5, 2.95, 7.5)
-wire(ax, 4.25, 7.5, 5.0, 7.5)
-wire(ax, 6.4, 7.5, 7.25, 7.5)
-wire(ax, 8.75, 7.5, 9.2, 7.5)
-
-ax.text(2.6, 7.7, 'IPTAT', ha='center', fontsize=6.5, style='italic')
-ax.text(4.6, 7.7, 'Imirr', ha='center', fontsize=6.5, style='italic')
-ax.text(6.8, 7.7, 'Vptat', ha='center', fontsize=6.5, style='italic')
-
-# VDD connection to PTAT
-line(ax, 1.5, 8.0, 1.5, 8.6)
-ax.text(1.5, 8.75, 'AVDD\n1.8V', ha='center', fontsize=6.5, color='gray')
-
-# PTAT calibration
-ax.text(5.0, 5.9,
-        'PTAT Temperature Conditioning:\n'
-        '• BJT pair (HBT-like in CMOS 180nm)\n'
-        '• Sensitivity: 1.6 mV/°C\n'
-        '• Range: −40..125°C → 0..265mV\n'
-        '• After ×6.8 gain + offset: 0..1.8V\n'
-        '• Nonlinearity < 0.5°C (corrected)',
-        ha='center', va='top', fontsize=7,
-        bbox=dict(boxstyle='round', fc='#f8f8f8', ec='gray', lw=0.8))
-
-ax.text(5.0, 3.0,
-        'Bandgap reference: 1.2V ±0.1%\n'
-        'Used as bias for all 3 channels',
-        ha='center', va='top', fontsize=6.5, color='gray')
-
-plt.tight_layout(rect=[0, 0, 1, 0.92])
+plt.tight_layout(rect=[0, 0, 1, 0.97])
 plt.savefig('fig_sensor_interface.png', dpi=150, bbox_inches='tight', facecolor='white')
 print("Saved: fig_sensor_interface.png")

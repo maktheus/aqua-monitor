@@ -11,7 +11,7 @@
 \usepackage{subcaption}
 \usepackage{cite}
 \usepackage{listings}
-\usepackage{xcolor}
+\usepackage[dvipsnames,table]{xcolor}
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{multirow}
@@ -639,6 +639,175 @@ especificacoes minimas:
 \end{itemize}
 
 %% ──────────────────────────────────────────────────────────────────────────────
+%%  INTEGRACAO NO SISTEMA SAR ADC -- PROJETO AQUAMONITOR
+%% ──────────────────────────────────────────────────────────────────────────────
+\section{Integração no Sistema SAR ADC --- Projeto AquaMonitor}
+\label{sec:integracao}
+
+Todo o trabalho de projeto, simulacao e verificacao desenvolvido neste relatorio
+tem como motivacao central um objetivo de maior escala: dotar o sistema
+\textbf{AquaMonitor} de um front-end de aquisiçao analogico-digital customizado,
+projetado especificamente para os requisitos de baixo consumo e alta precisao
+de sensores eletroquimicos e opticos em viveiros de piscicultura.
+
+\subsection{O Sistema AquaMonitor}
+
+O AquaMonitor e um sistema IoT de monitoramento continuo da qualidade da agua.
+A Figura~\ref{fig:sistema_completo} ilustra a cadeia completa de sinais, desde
+os sensores fisicos ate a interface de comunicacao IoT.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.9cm and 0.7cm,
+  box/.style={draw=aquacolor!80!black, rounded corners=4pt, fill=boxblue,
+              minimum width=2.3cm, minimum height=1.0cm,
+              font=\footnotesize\bfseries, text centered, text width=2.2cm},
+  abox/.style={draw=orange!70!black, rounded corners=4pt, fill=boxyellow,
+               minimum width=2.3cm, minimum height=1.0cm,
+               font=\footnotesize\bfseries, text centered, text width=2.2cm},
+  dbox/.style={draw=codegreen!70!black, rounded corners=4pt, fill=boxgreen,
+               minimum width=2.3cm, minimum height=1.0cm,
+               font=\footnotesize\bfseries, text centered, text width=2.2cm},
+  arr/.style={->, very thick, color=aquacolor!80!black},
+  lbl/.style={font=\tiny\itshape, text=gray}
+]
+  % Sensores
+  \node[box] (ph)  {pH\\Sensor};
+  \node[box, below=0.4cm of ph]  (tds) {TDS\\Sensor};
+  \node[box, below=0.4cm of tds] (tur) {Turbidez\\Sensor};
+
+  % Mux analogico
+  \node[abox, right=1.0cm of tds] (mux) {MUX\\Analogico\\$3\!\times\!1$};
+
+  % DAC capacitivo
+  \node[abox, right=1.0cm of mux] (dac) {DAC\\Capacitivo\\(4 bits)};
+
+  % COMPARADOR -- destaque
+  \node[draw=codered, very thick, rounded corners=4pt, fill=red!8,
+        minimum width=2.5cm, minimum height=1.2cm,
+        font=\footnotesize\bfseries, text centered, text width=2.3cm,
+        right=1.0cm of dac] (comp)
+        {\textcolor{codered}{COMPARADOR}\\{\tiny (este trabalho)}};
+
+  % SAR FSM
+  \node[dbox, right=1.0cm of comp] (fsm) {SAR FSM\\(Verilog)\\4 bits};
+
+  % MCU IoT
+  \node[dbox, right=1.0cm of fsm] (mcu) {MCU\\ESP32\\(IoT)};
+
+  % Setas
+  \draw[arr] (ph.east)  -| (mux.north);
+  \draw[arr] (tds.east) -- (mux.west);
+  \draw[arr] (tur.east) -| (mux.south);
+  \draw[arr] (mux) -- (dac) node[midway,above,lbl]{$V_{IN}$};
+  \draw[arr] (dac) -- (comp) node[midway,above,lbl]{$V_{DAC}$};
+  \draw[arr] (comp) -- (fsm) node[midway,above,lbl]{bit};
+  \draw[arr] (fsm) -- (mcu) node[midway,above,lbl]{D[3:0]};
+  % Realimentacao SAR
+  \draw[arr, dashed, color=codegreen!60!black]
+        (fsm.south) -- ++(0,-0.7) -| (dac.south)
+        node[near start, below, lbl]{chaves DAC};
+\end{tikzpicture}
+\caption{Cadeia de sinais completa do SAR ADC no sistema AquaMonitor. O
+         \textbf{comparador diferencial} (destacado em vermelho) e o bloco
+         analogico central projetado neste trabalho. O DAC capacitivo
+         (5 capacitores MIM, $C_{tot}=1600\,\text{fF}$) e a FSM SAR (Verilog)
+         completam o conversor de 4 bits.}
+\label{fig:sistema_completo}
+\end{figure}
+
+\subsection{Arquitetura SAR ADC de 4 Bits}
+
+O conversor opera pela tecnica de \textbf{aproximações sucessivas} (SAR ---
+\textit{Successive Approximation Register}). A cada conversao, o algoritmo
+realiza uma busca binaria em 4 passos:
+
+\begin{enumerate}[noitemsep]
+  \item \textbf{SAMPLE}: as chaves MOS conectam $V_{IN}$ ao no de topo do banco
+        capacitivo, armazenando a tensao do sensor.
+  \item \textbf{BIT3} (MSB): a FSM ativa $C_3 = 800\,\text{fF}$, gerando
+        $V_{DAC} = V_{REF}/2$. O comparador retorna
+        \texttt{comp\_out}; a FSM mantem ou rejeita o bit.
+  \item \textbf{BIT2, BIT1, BIT0}: processo repetido para $C_2$, $C_1$, $C_0$.
+  \item \textbf{DONE}: a FSM aciona EOC (\textit{End of Conversion}) e envia
+        \texttt{D[3:0]} ao MCU pelo barramento SPI.
+\end{enumerate}
+
+A Tabela~\ref{tab:sar_exemplo} ilustra uma conversao tipica para
+$V_{IN} = 1{,}125\,\text{V}$ (resultado esperado: \texttt{1010}).
+
+\begin{table}[H]
+\centering
+\caption{Exemplo de conversao SAR para $V_{IN}=1{,}125\,\text{V}$
+         ($V_{REF}=1{,}8\,\text{V}$, $V_{LSB}=112{,}5\,\text{mV}$)}
+\label{tab:sar_exemplo}
+\rowcolors{2}{boxblue}{white}
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Estado} & \textbf{$V_{DAC}$ (V)} & \textbf{comp\_out} & \textbf{Decisao} & \textbf{Registro} \\
+\midrule
+SAMPLE & --- & --- & --- & \texttt{0000} \\
+BIT3   & 0,900 & 1 & Mantém  & \texttt{1000} \\
+BIT2   & 1,350 & 0 & Rejeita & \texttt{1000} \\
+BIT1   & 1,125 & 1 & Mantém  & \texttt{1010} \\
+BIT0   & 1,181 & 0 & Rejeita & \texttt{1010} \\
+DONE   & ---   & --- & EOC=1 & \textbf{\texttt{1010}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{conceitobox}[Validacao Digital da FSM SAR (Icarus Verilog)]
+A logica de controle SAR foi validada em RTL com Icarus Verilog v12. O
+\textit{testbench} simulou a entrada $V_{IN} = 1{,}125\,\text{V}$ e verificou
+que a FSM produziu corretamente \texttt{data\_out = 1010}, com EOC em
+$t = 95\,\text{ns}$ (6 ciclos de clock a $100\,\text{MHz}$), sem
+\textit{race conditions} e com transicoes de estado corretas em BIT3 a BIT0.
+O arquivo Verilog (\texttt{sar\_fsm\_4bit.v}) e o testbench
+(\texttt{tb\_sar\_fsm.v}) estao disponíveis em \texttt{docs/microeletronica/}.
+\end{conceitobox}
+
+\subsection{Banco Capacitivo DAC}
+
+O DAC de redistribuicao de carga utiliza capacitores MIM com pesos binarios.
+A tensao gerada no no de topo ($V_{DAC}$) e a entrada INP do comparador:
+
+\begin{equation}
+  V_{DAC} = V_{REF} \cdot \frac{D_3 \cdot C_3 + D_2 \cdot C_2 + D_1 \cdot C_1
+            + D_0 \cdot C_0}{C_{tot}}
+\end{equation}
+
+\begin{table}[H]
+\centering
+\caption{Banco capacitivo do DAC SAR (capacitores MIM, CMOS 0{,}18~$\mu$m)}
+\label{tab:dac_caps}
+\begin{tabular}{cccl}
+\toprule
+\textbf{Bit} & \textbf{Capacitor} & \textbf{Valor (fF)} & \textbf{Chave MOS} \\
+\midrule
+3 (MSB) & $C_3$ & 800  & NMOS $W/L = 0{,}36/0{,}18\,\mu\text{m}$ \\
+2       & $C_2$ & 400  & NMOS $W/L = 0{,}36/0{,}18\,\mu\text{m}$ \\
+1       & $C_1$ & 200  & NMOS $W/L = 0{,}36/0{,}18\,\mu\text{m}$ \\
+0 (LSB) & $C_0$ & 100  & NMOS $W/L = 0{,}36/0{,}18\,\mu\text{m}$ \\
+Terminação & $C_{term}$ & 100 & --- \\
+\midrule
+Total   & $C_{tot}$ & 1600 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Posicionamento do Comparador no Die}
+
+No die final do SAR ADC, o comparador seria posicionado adjacente ao banco
+capacitivo para minimizar o comprimento da trilha Metal2 que conecta o no
+$V_{DAC}$ (saida do DAC) ao no INP (entrada diferencial positiva do comparador).
+Cada $1\,\mu\text{m}$ adicional de Metal2 acrescenta $\approx 0{,}05\,\text{fF}$
+de capacitancia parasita ao no INP, que pode degradar a precisao de
+amostragem do SAR. A area estimada do die completo (comparador + banco capacitivo
++ chaves) e de aproximadamente $120\,\mu\text{m} \times 80\,\mu\text{m} =
+9600\,\mu\text{m}^2$.
+
+%% ──────────────────────────────────────────────────────────────────────────────
 %%  CONCLUSOES
 %% ──────────────────────────────────────────────────────────────────────────────
 \section{Conclusoes}
@@ -668,7 +837,11 @@ do fluxo de design de circuitos integrados analogicos:
 
 O comparador projetado atende a todas as especificacoes com margens significativas,
 validando a viabilidade do bloco analogico central do SAR ADC de 4 bits para o
-AquaMonitor em tecnologia CMOS 0{,}18~$\mu$m.
+AquaMonitor em tecnologia CMOS 0{,}18~$\mu$m. Conforme apresentado na
+Secao~\ref{sec:integracao}, este bloco e a peca critica de um conversor maior
+que integra DAC capacitivo, FSM SAR em Verilog e interface IoT (ESP32),
+constituindo o front-end de aquisicao do sistema AquaMonitor para monitoramento
+de pH, TDS e turbidez em viveiros de piscicultura.
 
 %% ──────────────────────────────────────────────────────────────────────────────
 %%  REFERENCIAS

@@ -948,12 +948,12 @@ um quadro de 16 bits por transação. O formato do quadro é:
     \toprule
     \textbf{Bits} & \textbf{Campo} & \textbf{Largura} & \textbf{Conteúdo} \\
     \midrule
-    [15:12] & CH\_ID    & 4 bits & Identificador do canal (0=pH, 1=Cond, 2=Temp) \\
-    [11:8]  & RESULT    & 4 bits & Código ADC de 4 bits (0--15) \\
-    [7]     & EOC       & 1 bit  & Flag de fim de conversão \\
-    [6]     & OVERRUN   & 1 bit  & Flag de sobreposição de leitura \\
-    [5:2]   & RSVD      & 4 bits & Reservado \\
-    [1:0]   & CH\_ECHO  & 2 bits & Echo do canal selecionado \\
+    {[15:12]} & CH\_ID    & 4 bits & Identificador do canal (0=pH, 1=Cond, 2=Temp) \\
+    {[11:8]}  & RESULT    & 4 bits & Código ADC de 4 bits (0--15) \\
+    {[7]}     & EOC       & 1 bit  & Flag de fim de conversão \\
+    {[6]}     & OVERRUN   & 1 bit  & Flag de sobreposição de leitura \\
+    {[5:2]}   & RSVD      & 4 bits & Reservado \\
+    {[1:0]}   & CH\_ECHO  & 2 bits & Echo do canal selecionado \\
     \bottomrule
   \end{tabular}
 \end{table}
